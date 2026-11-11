@@ -19,21 +19,23 @@
         }
 
         /* 1. HIDE SYSTEM MOUSE EVERYWHERE & LOCK SELECTION */
-        *, *::before, *::after, html, body, a, button, div, span {
+        *, *::before, *::after, html, body, a, button, div, span, section, header, footer {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            cursor: none !important; /* System mouse 100% gayab */
-            user-select: none !important; /* Koi text copy nahi kar payega */
+            cursor: none !important;
+            user-select: none !important;
             -webkit-user-select: none !important;
             -webkit-user-drag: none !important;
         }
 
+        html { scroll-behavior: smooth; }
         body {
             background-color: var(--bg);
             color: var(--text);
             font-family: 'Space Grotesk', sans-serif;
             overflow-x: hidden;
+            min-height: 100vh;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
 
@@ -46,7 +48,7 @@
             pointer-events: none;
         }
 
-        /* ZERO-LAG CUSTOM CURSOR (LOCKED TOGETHER) */
+        /* ZERO-LAG CUSTOM CURSOR */
         .cursor-dot, .cursor-ring {
             position: fixed;
             top: 0; left: 0;
@@ -67,7 +69,6 @@
             border-radius: 50%;
             transition: width 0.15s ease, height 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
         }
-        /* Hover effect on cards/links */
         .cursor-ring.active {
             width: 42px; height: 42px;
             border-color: var(--cyan);
@@ -143,35 +144,44 @@
         @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
         /* MAIN LAYOUT */
-        main { position: relative; z-index: 1; padding-top: 150px; max-width: 1280px; margin: 0 auto; padding-left: 30px; padding-right: 30px; }
+        main { position: relative; z-index: 2; padding-top: 150px; max-width: 1280px; margin: 0 auto; padding-left: 30px; padding-right: 30px; }
+
+        /* HERO SECTION */
+        .hero { padding: 40px 0 60px 0; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 60px; }
+        .hero-tag { color: var(--cyan); font-size: 12px; letter-spacing: 3px; margin-bottom: 18px; display: inline-block; background: rgba(0, 240, 255, 0.06); padding: 6px 14px; border-left: 2px solid var(--cyan); }
+        .hero h1 { font-size: 58px; line-height: 1.08; margin-bottom: 22px; text-transform: uppercase; letter-spacing: -1px; }
+        .hero h1 span { color: var(--cyan); }
+        .hero p { color: var(--text-dim); max-width: 650px; font-size: 16px; line-height: 1.7; margin-bottom: 32px; }
+        .hero-btns { display: flex; gap: 18px; }
+        .btn-primary { background: var(--cyan); color: #000; font-weight: 700; padding: 14px 28px; font-size: 13px; letter-spacing: 1.5px; text-decoration: none; transition: 0.25s; }
+        .btn-primary:hover { box-shadow: 0 0 25px rgba(0, 240, 255, 0.6); }
 
         /* STATS STRIP */
         .stats-bar {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            background: rgba(7, 11, 18, 0.85);
-            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(7, 11, 18, 0.9);
+            border: 1px solid rgba(255,255,255,0.07);
             padding: 38px 20px;
-            margin-bottom: 75px;
+            margin-bottom: 85px;
             text-align: center;
         }
         .stat-val { font-size: 36px; font-weight: 700; margin-bottom: 6px; }
         .stat-Val-cyan { color: var(--cyan); }
         .stat-lbl { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
 
-        /* CORE ARCHITECTURE SECTION WITH CORNER BRACKETS */
-        .sec-title { font-size: 28px; font-weight: 700; margin-bottom: 35px; display: flex; align-items: center; gap: 12px; letter-spacing: 1px; }
+        /* SECTIONS & CARDS */
+        .sec-title { font-size: 28px; font-weight: 700; margin-bottom: 35px; display: flex; align-items: center; gap: 12px; letter-spacing: 1px; text-transform: uppercase; }
         .sec-title span { color: var(--cyan); }
-        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-bottom: 100px; }
+        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-bottom: 95px; }
         .arch-card {
-            background: rgba(8, 13, 22, 0.88);
-            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(8, 13, 22, 0.9);
+            border: 1px solid rgba(255,255,255,0.08);
             padding: 40px 32px;
             position: relative;
             transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
             transform-style: preserve-3d;
         }
-        /* Corner Cyber Bracket */
         .arch-card::after {
             content: '';
             position: absolute;
@@ -190,6 +200,15 @@
         .sys-id { color: var(--cyan); font-size: 12px; letter-spacing: 1.5px; margin-bottom: 16px; }
         .arch-card h3 { font-size: 22px; margin-bottom: 14px; }
         .arch-card p { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
+
+        /* FAQ SECTION */
+        .faq-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 100px; }
+        .faq-item { background: rgba(8, 13, 22, 0.85); border: 1px solid rgba(255,255,255,0.07); padding: 24px 30px; }
+        .faq-item h4 { font-size: 17px; margin-bottom: 8px; color: var(--cyan); }
+        .faq-item p { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+
+        /* FOOTER */
+        footer { border-top: 1px solid rgba(255,255,255,0.06); padding: 40px 50px; text-align: center; color: var(--text-dim); font-size: 12px; position: relative; z-index: 2; }
     </style>
 </head>
 <body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
@@ -219,14 +238,25 @@
     <div id="ticker-container">
         <div class="ticker-label mono">SYS.STATUS: ONLINE</div>
         <div class="ticker-wrapper" id="ticker-track">
-            <div class="tick-item mono"><span style="color: var(--cyan);">[!] INITIALIZING LIVE STREAM...</span></div>
+            <div class="tick-item mono"><span style="color: var(--cyan);">[!] CONNECTING TO LIVE MARKET FEED...</span></div>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <main>
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-tag mono">SYS.VER // 4.0 QUANTITATIVE EXECUTION</div>
+            <h1>ALGORITHMIC <span>PRECISION</span><br>BUILT FOR DOMINANCE.</h1>
+            <p>Institutional-grade execution systems, automated Smart Money Concept (SMC) liquidity sweep detectors, and ultra-low latency Indian & Global market feeds.</p>
+            <div class="hero-btns">
+                <a href="#services" class="btn-primary mono hover-target">EXPLORE ARCHITECTURE</a>
+                <a href="#contact" class="btn-comms mono hover-target">DEPLOY SYSTEM</a>
+            </div>
+        </section>
+
         <!-- STATS BAR -->
-        <section class="stats-bar">
+        <section class="stats-bar" id="why">
             <div>
                 <div class="stat-val mono"><span class="stat-Val-cyan">99.9</span>%</div>
                 <div class="stat-lbl mono">UPTIME RELIABILITY</div>
@@ -266,19 +296,53 @@
                 </div>
             </div>
         </section>
+
+        <!-- CLIENT VERIFICATION / REVIEWS -->
+        <section id="reviews">
+            <div class="sec-title mono"><span>[ // ]</span> DEPLOYMENT LOGS &amp; VERIFICATION</div>
+            <div class="cards-grid">
+                <div class="arch-card hover-target">
+                    <div class="sys-id mono">LOG.01 // FUNDED TRADER</div>
+                    <h3>Zero Slippage Execution</h3>
+                    <p>"Cleared Phase 1 and Phase 2 on a $100K account with strict 1.5% daily drawdown guardrails. The MOR gold engine runs untouched."</p>
+                </div>
+                <div class="arch-card hover-target">
+                    <div class="sys-id mono">LOG.02 // DESK QUANT</div>
+                    <h3>Custom NSE Screener</h3>
+                    <p>"Real-time liquidity sweep alerts across Nifty 50 constituents broadcast directly to our desk Telegram with zero repainting."</p>
+                </div>
+                <div class="arch-card hover-target">
+                    <div class="sys-id mono">LOG.03 // PROP OPERATOR</div>
+                    <h3>Pine v6 Webhook Bridge</h3>
+                    <p>"Sub-second execution from custom indicator signals straight into terminal orders with automated trailing stop management."</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq">
+            <div class="sec-title mono"><span>[ // ]</span> SYSTEM PROTOCOLS (FAQ)</div>
+            <div class="faq-list">
+                <div class="faq-item hover-target">
+                    <h4 class="mono">01. DO ALGORITHMS INCLUDE HARD DRAWDOWN LOCKS?</h4>
+                    <p>Yes. Every system is engineered with an equity circuit-breaker that liquidates open positions and locks trading prior to hitting prop-firm daily limits.</p>
+                </div>
+                <div class="faq-item hover-target">
+                    <h4 class="mono">02. HOW IS REAL-TIME NSE &amp; GLOBAL DATA HANDLED?</h4>
+                    <p>Our cloud bridge connects directly to broker APIs and institutional feeds, keeping API credentials encrypted inside isolated server environments.</p>
+                </div>
+            </div>
+        </section>
     </main>
 
+    <footer id="contact" class="mono">
+        IAM CHAMPGRID // ALGORITHMIC ENGINEERING STUDIO — ALL RIGHTS RESERVED
+    </footer>
+
     <script>
-        // ==========================================
         // 1. ANTI-HACK & MOUSE/KEYBOARD LOCKS
-        // ==========================================
-        // Block Right Click
         document.addEventListener('contextmenu', e => e.preventDefault());
-
-        // Block Middle Click & Aux Clicks
         document.addEventListener('auxclick', e => e.preventDefault());
-
-        // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U (View Source), Ctrl+S, Ctrl+C
         document.addEventListener('keydown', e => {
             if (
                 e.key === 'F12' ||
@@ -290,9 +354,7 @@
             }
         });
 
-        // ==========================================
         // 2. ZERO-SEPARATION CUSTOM CURSOR
-        // ==========================================
         const dot = document.getElementById('cursor-dot');
         const ring = document.getElementById('cursor-ring');
         let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
@@ -305,15 +367,13 @@
         });
 
         function animateCursor() {
-            // High speed factor (0.75) so dot and circle stay locked together
-            ringX += (mouseX - ringX) * 0.75;
-            ringY += (mouseY - ringY) * 0.75;
+            ringX += (mouseX - ringX) * 0.78;
+            ringY += (mouseY - ringY) * 0.78;
             ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
             requestAnimationFrame(animateCursor);
         }
         animateCursor();
 
-        // Cursor Hover Effects & 3D Card Tilt
         document.querySelectorAll('.hover-target').forEach(el => {
             el.addEventListener('mouseenter', () => ring.classList.add('active'));
             el.addEventListener('mouseleave', () => {
@@ -332,9 +392,7 @@
             }
         });
 
-        // ==========================================
         // 3. BACKGROUND PARTICLES
-        // ==========================================
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() {
@@ -367,9 +425,7 @@
         }
         drawParticles();
 
-        // ==========================================
         // 4. REAL-TIME HYBRID TICKER ENGINE
-        // ==========================================
         const RENDER_API = "https://dhan-secure-server.onrender.com/live-prices";
 
         function isIndianMarketOpen() {
@@ -402,7 +458,6 @@
         }
 
         async function fetchLiveStream() {
-            // 1. Try Render Backend (Only accept if it's NOT the old 24500.50 test data)
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 2500);
@@ -418,11 +473,8 @@
                     renderTickerHTML(json.data);
                     return;
                 }
-            } catch (e) {
-                // Fallback to direct live stream below
-            }
+            } catch (e) {}
 
-            // 2. Direct Real-Time Feed (Instant Zero-Delay Backup)
             try {
                 const symbols = "BTC-USD,ETH-USD,GC=F,^NSEI,^NSEBANK,HDFCBANK.NS,RELIANCE.NS,ICICIBANK.NS";
                 const yUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&_=${Date.now()}`;
