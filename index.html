@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IAMCHAMPGRID | Institutional Quant Systems</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #04060A; 
+            --bg-panel: #0A0D14;
+            --bg-panel-light: #11151F;
+            --cyan: #00F0FF;
+            --green: #00FFA3;
+            --red: #FF3366;
+            --text-main: #FFFFFF;
+            --text-dim: #8892B0;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(0, 240, 255, 0.4);
+            --gold: #C9A84C; 
+        }
+        @media (pointer: fine) { * { cursor: none; } }
+        #cursor-dot {
+            width: 6px; height: 6px; background: var(--gold); border-radius: 50%;
+            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 10000;
+            opacity: 0; transition: opacity 0.3s; will-change: transform;
+        }
+        #cursor-ring {
+            width: 18px; height: 18px;
+            border: 1.5px solid rgba(201, 168, 76, 0.7); border-radius: 50%;
+            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+            opacity: 0; transition: width 0.2s, height 0.2s, background 0.2s, border-color 0.2s, opacity 0.3s;
+            will-change: transform;
+        }
+        #cursor-ring.hovered {
+            width: 28px; height: 28px;
+            background: rgba(0, 240, 255, 0.05); border-color: var(--cyan);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Rajdhani', sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            line-height: 1.6; 
+            position: relative; 
+            scroll-behavior: smooth; 
+            -webkit-user-select: none; 
+            -moz-user-select: none;    
+            -ms-user-select: none;     
+            user-select: none;         
+        }
+        
+        .noise-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1; opacity: 0.02; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        nav { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(4, 6, 10, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 50px; }
+        .logo { font-size: 22px; font-weight: 700; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 12px; letter-spacing: 2px; }
+        .logo span { color: var(--gold); }
+        .pulse { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); animation: pulse-anim 1.5s infinite; }
+        @keyframes pulse-anim {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 163, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 163, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 163, 0); }
+        }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 13px; letter-spacing: 1px; transition: 0.3s; }
+        .nav-links a:hover { color: var(--cyan); }
+        
+        /* UPDATED TICKER CSS */
+        #ticker-container { position: fixed; top: 70px; width: 100%; height: 44px; background: #010306; border-bottom: 1px solid var(--border); z-index: 99; display: flex; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden; }
+        .ticker-label { background: var(--cyan); color: #000; padding: 0 20px; font-weight: 700; display: flex; align-items: center; font-size: 12px; letter-spacing: 1px; z-index: 2; height: 100%; border-right: 2px solid var(--cyan); }
+        .tv-wrapper { flex-grow: 1; height: 100%; display: flex; align-items: center; pointer-events: none; }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 50px; position: relative; z-index: 10; }
+        #hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; position: relative; padding-top: 100px; }
+        .glitch-text { font-size: clamp(40px, 6.5vw, 80px); font-weight: 700; line-height: 1; text-transform: uppercase; margin-bottom: 20px; }
+        .hero-desc { font-size: 20px; color: var(--text-dim); max-width: 600px; margin-bottom: 40px; border-left: 3px solid var(--cyan); padding-left: 20px; }
+        .hud-btn { background: transparent; color: var(--cyan); border: 1px solid var(--cyan); padding: 15px 30px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; position: relative; overflow: hidden; transition: 0.3s; text-decoration: none; display: inline-block; margin-right: 20px; }
+        .hud-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: rgba(0,240,255,0.15); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: -1; }
+        .hud-btn:hover { color: #fff; box-shadow: 0 0 20px var(--border-glow); }
+        .hud-btn:hover::before { left: 0; }
+        .hud-btn.primary { background: rgba(0, 240, 255, 0.05); }
+        #stats { padding: 40px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg-panel); margin-bottom: 100px; }
+        .stats-grid { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .stat-item { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px; position: relative; }
+        .stat-item:not(:last-child)::after { content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); height: 40px; width: 1px; background: var(--border); }
+        .stat-val { font-size: 36px; font-weight: 700; color: var(--text-main); line-height: 1; margin-bottom: 5px; }
+        .stat-val span { color: var(--cyan); }
+        .stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .section-title { font-size: 36px; margin-bottom: 50px; color: var(--text-main); display: flex; align-items: center; gap: 15px; }
+        .section-title::before { content: '[//]'; color: var(--cyan); font-family: 'JetBrains Mono'; }
+        section { padding-bottom: 120px; }
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .card { background: var(--bg-panel); border: 1px solid var(--border); padding: 40px 30px; position: relative; transition: 0.3s; }
+        .card::after { content: ''; position: absolute; top: 0; right: 0; width: 20px; height: 20px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); border-color: var(--cyan); background: rgba(10, 13, 20, 0.9); }
+        .card:hover::after { width: 100%; height: 100%; border-color: rgba(0, 240, 255, 0.2); }
+        .card-num { color: var(--cyan); font-size: 14px; margin-bottom: 15px; display: block; }
+        .card h3 { font-size: 24px; margin-bottom: 15px; }
+        .card p { color: var(--text-dim); font-size: 16px; }
+        .why-us-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+        .wu-item { background: var(--bg-base); padding: 40px; transition: 0.3s; position: relative; overflow: hidden; }
+        .wu-item:hover { background: var(--bg-panel); }
+        .wu-item::before { content: ''; position: absolute; bottom: 0; left: 0; width: 0%; height: 2px; background: var(--green); transition: 0.4s ease; }
+        .wu-item:hover::before { width: 100%; }
+        .wu-icon { font-size: 24px; color: var(--green); margin-bottom: 15px; }
+        .wu-item h4 { font-size: 20px; margin-bottom: 10px; }
+        .wu-item p { color: var(--text-dim); font-size: 14px; }
+        .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        .review-card { background: var(--bg-panel-light); border: 1px solid var(--border); padding: 40px; border-radius: 4px; position: relative; transition: 0.3s; }
+        .review-card:hover { border-color: var(--gold); transform: translateY(-5px); }
+        .r-stars { color: var(--gold); font-size: 16px; margin-bottom: 20px; }
+        .r-text { font-size: 16px; color: var(--text-main); font-style: italic; margin-bottom: 30px; }
+        .r-author { display: flex; align-items: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; }
+        .r-avatar { width: 40px; height: 40px; background: rgba(201, 168, 76, 0.1); color: var(--gold); border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 700; border-radius: 4px; }
+        .r-info strong { display: block; font-size: 16px; }
+        .r-info span { font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
+        .faq-wrapper { max-width: 800px; }
+        .faq-item { border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+        .faq-q { width: 100%; text-align: left; background: none; border: none; color: var(--text-main); padding: 20px 0; font-size: 18px; font-family: 'Rajdhani', sans-serif; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .faq-icon { color: var(--cyan); font-size: 20px; transition: 0.3s; }
+        .faq-item.active .faq-icon { transform: rotate(45deg); color: var(--green); }
+        .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; color: var(--text-dim); font-size: 15px; }
+        .faq-item.active .faq-a { padding-bottom: 20px; }
+        #dispatch { padding-top: 60px; }
+        .terminal-box { background: #030508; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; display: grid; grid-template-columns: 1.2fr 1fr; }
+        .t-header { grid-column: 1 / -1; background: #05080E; padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .t-header span { width: 12px; height: 12px; border-radius: 50%; background: #333; }
+        .t-header span:nth-child(1) { background: #FF5F56; }
+        .t-header span:nth-child(2) { background: #FFBD2E; }
+        .t-header span:nth-child(3) { background: #27C93F; }
+        .t-title { margin-left: 15px; font-size: 12px; color: var(--text-dim); }
+        .t-body { padding: 40px; border-right: 1px solid var(--border); }
+        .t-info { padding: 40px; background: rgba(0, 240, 255, 0.01); display: flex; flex-direction: column; }
+        .input-group { margin-bottom: 25px; position: relative; }
+        .input-group label { display: block; color: var(--cyan); font-size: 12px; margin-bottom: 8px; letter-spacing: 1px; }
+        
+        input, textarea { 
+            width: 100%; 
+            background: rgba(255,255,255,0.02); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 15px; 
+            color: var(--text-main); 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 14px; 
+            outline: none; 
+            transition: 0.3s;
+            -webkit-user-select: auto; 
+            -moz-user-select: auto;    
+            -ms-user-select: auto;     
+            user-select: auto;         
+        }
+        
+        input:focus, textarea:focus { border-color: var(--cyan); background: rgba(0, 240, 255, 0.05); }
+        textarea { height: 100px; resize: none; }
+        .custom-select { position: relative; width: 100%; }
+        .select-selected { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 14px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
+        .select-selected:after { content: ""; display: inline-block; width: 8px; height: 8px; border-right: 2px solid var(--cyan); border-bottom: 2px solid var(--cyan); transform: rotate(45deg); transition: 0.3s; }
+        .select-selected.select-arrow-active:after { transform: rotate(-135deg); border-color: var(--green); }
+        .select-selected:hover, .select-selected.select-arrow-active { border-color: var(--cyan); background: rgba(0, 240, 255, 0.05); }
+        .select-items { position: absolute; background: #030508; top: 100%; left: 0; right: 0; z-index: 99; border: 1px solid var(--cyan); border-top: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); max-height: 200px; overflow-y: auto; }
+        .select-hide { display: none; }
+        .select-items div { color: var(--text-dim); padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s ease; }
+        .select-items div:hover { background: rgba(0, 240, 255, 0.1); color: var(--cyan); padding-left: 25px; border-left: 3px solid var(--cyan); }
+        .terminal-logs { font-size: 13px; color: var(--text-main); line-height: 1.8; margin-bottom: 30px; }
+        .contact-grid-small { display: flex; gap: 15px; width: 100%; margin-top: auto; }
+        .contact-block { flex: 1; padding: 20px; background: rgba(3, 5, 10, 0.8); border: 1px solid var(--border); text-decoration: none; color: var(--text-main); position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 5px; transition: 0.3s ease; }
+        .contact-block:hover { transform: translateY(-2px); border-color: var(--cyan); }
+        .contact-block::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); transition: 0.5s ease-in-out; }
+        .contact-block:hover::after { left: 100%; }
+        .cb-title { font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .cb-value { font-size: 12px; font-weight: 700; color: var(--cyan); overflow-wrap: break-word; }
+        .disclaimer-box { text-align: center; padding: 20px 50px; font-size: 11px; color: #555; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 40px; text-transform: uppercase; letter-spacing: 0.5px; }
+        #sys-loader { display: none; margin-top: 20px; color: var(--cyan); font-size: 14px; line-height: 1.8; }
+        @media(max-width: 900px) {
+            #cursor-dot, #cursor-ring { display: none !important; }
+            * { cursor: auto !important; }
+            nav { padding: 0 20px; }
+            .nav-links { display: none; }
+            .terminal-box { grid-template-columns: 1fr; }
+            .t-body { border-right: none; border-bottom: 1px solid var(--border); }
+            .hero-desc { font-size: 16px; }
+            .container { padding: 0 20px; }
+            .stat-item:not(:last-child)::after { display: none; }
+            .stats-grid { flex-direction: column; gap: 40px; }
+        }
+        @media(max-width: 600px) { .contact-grid-small { flex-direction: column; gap: 10px; } }
+    </style>
+</head>
+<body>
+    <div class="noise-overlay"></div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <nav>
+        <a href="#" class="logo"><div class="pulse"></div>IAM<span>CHAMPGRID</span></a>
+        <div class="nav-links mono">
+            <a href="#architecture">SERVICES</a>
+            <a href="#why-us">WHY US</a>
+            <a href="#reviews">REVIEWS</a>
+            <a href="#faq">FAQ</a>
+        </div>
+        <div class="mono" style="font-size: 12px;">
+            <a href="#dispatch" class="hud-btn" style="padding: 8px 15px; font-size: 12px; margin: 0;">SECURE COMMS</a>
+        </div>
+    </nav>
+    
+    <!-- LIVE TRADINGVIEW TICKER TAPE -->
+    <div id="ticker-container">
+        <div class="ticker-label mono">SYS.STATUS: ONLINE</div>
+        <div class="tv-wrapper">
+            <div class="tradingview-widget-container">
+                <div class="tradingview-widget-container__widget"></div>
+                <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+                {
+                "symbols": [
+                    { "proName": "BINANCE:BTCUSDT", "title": "BTC/USD" },
+                    { "proName": "BINANCE:ETHUSDT", "title": "ETH/USD" },
+                    { "proName": "OANDA:XAUUSD", "title": "XAU/USD" },
+                    { "proName": "NSE:NIFTY", "title": "NIFTY 50" },
+                    { "proName": "NSE:BANKNIFTY", "title": "BANKNIFTY" }
+                ],
+                "showSymbolLogo": false,
+                "isTransparent": true,
+                "displayMode": "regular",
+                "colorTheme": "dark",
+                "locale": "en"
+                }
+                </script>
+            </div>
+        </div>
+    </div>
+    
+    <section id="hero" class="container">
+        <div class="mono" style="color: var(--cyan); margin-bottom: 20px; font-size: 14px; letter-spacing: 2px;">> ALGORITHMIC ENGINEERING STUDIO</div>
+        <div class="glitch-wrapper">
+            <h1 class="glitch-text">INSTITUTIONAL<br>GRADE EXECUTION.</h1>
+        </div>
+        <p class="hero-desc">Advanced Pine Script v6, XAUUSD automated EAs, and Prop Firm compliance bots. We convert discretionary logic into strict, emotionless mathematical models.</p>
+        <div>
+            <a href="#architecture" class="hud-btn primary mono">EXPLORE SYSTEMS</a>
+            <a href="#dispatch" class="hud-btn mono">INITIALIZE PROJECT</a>
+        </div>
+    </section>
+    <div id="stats">
+        <div class="container stats-grid">
+            <div class="stat-item"><div class="stat-val mono">99.9<span>%</span></div><div class="stat-label">Uptime Reliability</div></div>
+            <div class="stat-item"><div class="stat-val mono">MT5<span>/</span>4</div><div class="stat-label">Platform Support</div></div>
+            <div class="stat-item"><div class="stat-val mono">24<span>/</span>7</div><div class="stat-label">Automated Execution</div></div>
+            <div class="stat-item"><div class="stat-val mono">NSE<span>/</span>BSE</div><div class="stat-label">Indian Market Focus</div></div>
+        </div>
+    </div>
+    <section id="architecture" class="container">
+        <h2 class="section-title">CORE ARCHITECTURE</h2>
+        <div class="grid-cards">
+            <div class="card"><span class="card-num mono">SYS.01</span><h3>Prop Firm Bots (MT5)</h3><p>Algorithms strictly coded to pass 2-step evaluations. Hard-coded daily drawdown limits and consistency rule compliance.</p></div>
+            <div class="card"><span class="card-num mono">SYS.02</span><h3>Pine Script v6 Logic</h3><p>Advanced TradingView indicators. Custom multi-timeframe screeners, no-wick logic, and automated webhook execution setups.</p></div>
+            <div class="card"><span class="card-num mono">SYS.03</span><h3>XAUUSD Grid Engines</h3><p>High-frequency, grid, or institutional order flow strategies mathematically optimized specifically for Gold volatility.</p></div>
+        </div>
+    </section>
+    <section id="why-us" class="container">
+        <h2 class="section-title">BUILT DIFFERENT</h2>
+        <p style="color: var(--text-dim); margin-bottom: 40px; font-size: 18px; max-width: 600px;">We don't just write code — we trade with it. Every system is stress-tested in live market conditions before delivery.</p>
+        <div class="why-us-grid">
+            <div class="wu-item"><div class="wu-icon">🛡️</div><h4>Risk First Architecture</h4><p>Drawdown limits, lot controls, session filters, and high-impact news avoidance baked into the core of every EA by default.</p></div>
+            <div class="wu-item"><div class="wu-icon">⚡</div><h4>Production Ready</h4><p>No fragile proof-of-concept scripts. Every system runs live with full error handling, disconnect recovery, and edge case coverage.</p></div>
+            <div class="wu-item"><div class="wu-icon">🇮🇳</div><h4>India Expertise</h4><p>Deep structural knowledge of NSE/BSE options chains, F&O data feeds, and local broker API integrations (Zerodha, AngelOne).</p></div>
+            <div class="wu-item"><div class="wu-icon">⚙️</div><h4>Ongoing Support</h4><p>Markets evolve. We offer post-delivery support for platform updates, broker compatibility shifts, and parameter fine-tuning.</p></div>
+        </div>
+    </section>
+    <section id="reviews" class="container">
+        <h2 class="section-title">TRADER INTEL</h2>
+        <div class="reviews-grid">
+            <div class="review-card"><div class="r-stars">★★★★★</div><div class="r-text">"The XAUUSD Grid EA they built has been running flawlessly on my live account for 3 months. The drawdown protection is solid and the ATR-based dynamic spacing is genius."</div><div class="r-author"><div class="r-avatar">S</div><div class="r-info"><strong class="mono">Siddharth M.</strong><span class="mono">Prop Firm Trader, Delhi</span></div></div></div>
+            <div class="review-card"><div class="r-stars">★★★★★</div><div class="r-text">"Their ICT Smart Money Pine Script toolkit is the best I've used. The FVG zones and Liquidity sweeps map perfectly. Saves me hours of manual chart marking."</div><div class="r-author"><div class="r-avatar">N</div><div class="r-info"><strong class="mono">Neha R.</strong><span class="mono">Options Trader, Pune</span></div></div></div>
+            <div class="review-card"><div class="r-stars">★★★★★</div><div class="r-text">"Joined the Telegram channel for Nifty 50 calls. Intraday setups are clear, well-timed, and risk-reward is properly managed. Finally a reliable Indian market tech team."</div><div class="r-author"><div class="r-avatar">V</div><div class="r-info"><strong class="mono">Vikram K.</strong><span class="mono">Index Trader, Ahmedabad</span></div></div></div>
+        </div>
+    </section>
+    <section id="faq" class="container">
+        <h2 class="section-title">COMMON QUESTIONS</h2>
+        <div class="faq-wrapper">
+            <div class="faq-item"><button class="faq-q">What platforms do you build systems for? <span class="faq-icon">+</span></button><div class="faq-a"><p>We specialize primarily in MetaTrader 5 (MQL5) for Forex/Prop firm execution and TradingView (Pine Script v6) for charting and webhook automation. We also handle Python integration for local Indian brokers.</p></div></div>
+            <div class="faq-item"><button class="faq-q">How long does it take to build a custom EA? <span class="faq-icon">+</span></button><div class="faq-a"><p>Standard systems take 3-7 days to code, test, and deliver. Highly complex systems involving multi-timeframe analysis or machine learning layers may take 2-3 weeks.</p></div></div>
+            <div class="faq-item"><button class="faq-q">Do you provide the source code? <span class="faq-icon">+</span></button><div class="faq-a"><p>Yes, upon project completion and final payment, the open-source code (.mq5 or .pine) is handed over to you completely. Your intellectual property remains yours.</p></div></div>
+            <div class="faq-item"><button class="faq-q">Can you optimize an existing indicator or EA? <span class="faq-icon">+</span></button><div class="faq-a"><p>Yes, if you possess the original source code, we can audit the logic, refactor messy code, fix repainting issues in Pine Script, and run heavy data optimizations for EAs.</p></div></div>
+        </div>
+    </section>
+    <section id="dispatch" class="container">
+        <h2 class="section-title">START A PROJECT</h2>
+        <div class="terminal-box">
+            <div class="t-header"><span></span><span></span><span></span><div class="t-title mono">iamchampgrid — contact</div></div>
+            <div class="t-body">
+                <form id="secure-form">
+                    <div class="input-group mono"><label>> YOUR NAME</label><input type="text" id="c_name" placeholder="Your Name" required></div>
+                    <div class="input-group mono">
+                        <label>> WHAT DO YOU NEED?</label>
+                        <div class="custom-select" id="custom-arch-dropdown">
+                            <div class="select-selected">Prop Firm EA (MT5)</div>
+                            <div class="select-items select-hide">
+                                <div data-value="Prop Firm EA (MT5)">Prop Firm EA (MT5)</div>
+                                <div data-value="TradingView Pine Script">TradingView Pine Script</div>
+                                <div data-value="XAUUSD Custom System">XAUUSD Custom System</div>
+                                <div data-value="General Consultation">General Consultation</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="c_type" value="Prop Firm EA (MT5)">
+                    </div>
+                    <div class="input-group mono"><label>> DESCRIBE YOUR STRATEGY</label><textarea id="c_msg" placeholder="Define your strategy rules, indicators, and risk limits..." required></textarea></div>
+                    <button type="submit" class="hud-btn primary mono" style="width: 100%; margin: 0; text-align: center;" id="submit-btn">SEND MESSAGE</button>
+                    <div id="sys-loader" class="mono"></div>
+                </form>
+            </div>
+            <div class="t-info mono">
+                <div class="terminal-logs mono" style="margin-bottom: 25px;">
+                    <span style="color: var(--cyan); font-size: 16px; font-weight: 700;">DIRECT CONTACT</span><br><br>
+                    <span style="color: var(--text-dim);">Reach out directly on Telegram or Email. We respond fast.</span>
+                </div>
+                <div class="contact-grid-small mono text-sm">
+                    <a href="https://t.me/IAMCHAMPGRID" target="_blank" class="contact-block">
+                        <span class="cb-title">&#128242; TELEGRAM</span>
+                        <span class="cb-value">IAMCHAMPGRID</span>
+                        <span style="font-size: 11px; color: var(--green); margin-top: 6px;">&#10003; Free Calls — Indian Market</span>
+                    </a>
+                    <a href="mailto:personalraval7@gmail.com" class="contact-block">
+                        <span class="cb-title">&#9993; EMAIL</span>
+                        <span class="cb-value">personalraval7@gmail.com</span>
+                        <span style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">For project details &amp; quotes</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="disclaimer-box mono container">
+        Disclaimer: IAMCHAMPGRID is a software development and algorithmic engineering studio. We are NOT registered with SEBI, RBI, or any financial regulatory authority. All systems, indicators, and EAs are developed for educational and technical execution purposes only. We do not provide financial advice, tips, or guarantee profits. Trading in financial markets involves significant risk of loss.
+    </div>
+    <footer class="container mono" style="padding: 20px 50px 40px 50px; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+        <div>IAMCHAMPGRID &copy; 2026</div>
+        <div>INSTITUTIONAL GRADE ALGORITHMS</div>
+    </footer>
+    <script>
+        const dot = document.getElementById('cursor-dot');
+        const ring = document.getElementById('cursor-ring');
+        let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100, isMouseMoving = false;
+        document.addEventListener('mousemove', (e) => {
+            if(!isMouseMoving) { dot.style.opacity = 1; ring.style.opacity = 1; isMouseMoving = true; }
+            mouseX = e.clientX; mouseY = e.clientY;
+            dot.style.transform = `translate(calc(${mouseX}px - 50%), calc(${mouseY}px - 50%))`;
+        });
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
+            ring.style.transform = `translate(calc(${ringX}px - 50%), calc(${ringY}px - 50%))`;
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+        document.querySelectorAll('a, button, input, textarea, .select-selected, .select-items div, .faq-q').forEach(el => {
+            el.addEventListener('mouseenter', () => ring.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => ring.classList.remove('hovered'));
+        });
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            item.querySelector('.faq-q').addEventListener('click', () => {
+                const isActive = item.classList.contains('active');
+                faqItems.forEach(f => { f.classList.remove('active'); f.querySelector('.faq-a').style.maxHeight = null; });
+                if(!isActive) { item.classList.add('active'); const a = item.querySelector('.faq-a'); a.style.maxHeight = a.scrollHeight + "px"; }
+            });
+        });
+        const selectBox = document.querySelector('.select-selected');
+        const selectItems = document.querySelector('.select-items');
+        const hiddenInput = document.getElementById('c_type');
+        selectBox.addEventListener('click', function(e) { e.stopPropagation(); selectItems.classList.toggle('select-hide'); this.classList.toggle('select-arrow-active'); });
+        selectItems.querySelectorAll('div').forEach(option => {
+            option.addEventListener('click', function() {
+                selectBox.innerHTML = this.innerHTML;
+                hiddenInput.value = this.getAttribute('data-value');
+                selectItems.classList.add('select-hide');
+                selectBox.classList.remove('select-arrow-active');
+            });
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.matches('.select-selected')) { selectItems.classList.add('select-hide'); selectBox.classList.remove('select-arrow-active'); }
+        });
+        document.getElementById('secure-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const loader = document.getElementById('sys-loader');
+            const name = document.getElementById('c_name').value;
+            const type = document.getElementById('c_type').value;
+            const msg = document.getElementById('c_msg').value;
+            btn.style.display = 'none';
+            loader.style.display = 'block';
+            loader.innerHTML = '[!] Compiling logic parameters...<br>[!] Establishing secure tunnel...<br>[!] Transmitting data payload to personalraval7...';
+            fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ access_key: '7e861962-fa2f-4087-a1f6-6bc819cbc99e', subject: 'CHAMPGRID Dispatch: New Client Transmission', from_name: 'IAMCHAMPGRID Terminal', Client_Name: name, Target_Architecture: type, Logic_Parameters: msg })
+            })
+            .then(async (response) => {
+                if (response.status == 200) { loader.innerHTML += '<br><br><span style="color: var(--green);">[✓] TRANSMISSION SUCCESSFUL. DATA DELIVERED TO INBOX.</span>'; }
+                else { loader.innerHTML += '<br><br><span style="color: var(--red);">[X] TRANSMISSION FAILED.</span>'; }
+            })
+            .catch(() => { loader.innerHTML += '<br><br><span style="color: var(--red);">[X] ERROR: CONNECTION FAILED.</span>'; })
+            .then(() => {
+                setTimeout(() => {
+                    btn.style.display = 'block'; loader.style.display = 'none';
+                    document.getElementById('secure-form').reset();
+                    selectBox.innerHTML = "Prop Firm EA (MT5)"; hiddenInput.value = "Prop Firm EA (MT5)";
+                }, 4000);
+            });
+        });
+        
+        // --- SECURITY: Disable Right Click & Inspect Element ---
+        document.addEventListener('contextmenu', event => event.preventDefault()); 
+
+        document.onkeydown = function (e) {
+            if (e.keyCode == 123) return false;
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.keyCode == 'P'.charCodeAt(0)) return false;
+        };
+
+        // --- SECURITY: Disable Text Selection via JS (Except Form Inputs) ---
+        document.addEventListener('selectstart', function(e) {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>
