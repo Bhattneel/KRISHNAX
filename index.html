@@ -3,96 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHAMPGRID - Algorithmic Engineering</title>
+    <title>IAM CHAMPGRID — Algorithmic Engineering Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #010306; --cyan: #00e5ff; --text: #ffffff; --text-dim: #888; --green: #00ffa3; --red: #ff3366; --border: rgba(255,255,255,0.1); }
-        body { margin: 0; padding: 0; background-color: var(--bg); color: var(--text); font-family: 'Arial', sans-serif; cursor: none; overflow-x: hidden; }
-        .mono { font-family: monospace; }
-        
-        /* Cursor CSS */
-        .cursor-dot, .cursor-ring { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); }
-        .cursor-dot { width: 5px; height: 5px; background: var(--cyan); border-radius: 50%; }
-        .cursor-ring { width: 25px; height: 25px; border: 1px solid var(--cyan); border-radius: 50%; transition: width 0.2s, height 0.2s; }
+        :root {
+            --bg: #020408;
+            --surface: #070b12;
+            --cyan: #00f0ff;
+            --gold: #eab308;
+            --text: #f8fafc;
+            --text-dim: #64748b;
+            --green: #00ffa3;
+            --red: #ff3366;
+            --border: rgba(0, 240, 255, 0.14);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: none;
+            overflow-x: hidden;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* Ticker CSS */
-        #ticker-container { position: fixed; top: 70px; width: 100%; height: 44px; background: #010306; border-bottom: 1px solid var(--border); z-index: 99; display: flex; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .ticker-label { background: var(--cyan); color: #000; padding: 0 20px; font-weight: 700; display: flex; align-items: center; font-size: 12px; letter-spacing: 1px; z-index: 2; height: 100%; border-right: 2px solid var(--cyan); }
-        .ticker-wrapper { display: flex; white-space: nowrap; animation: slideLeft 25s linear infinite; align-items: center; height: 100%; }
+        /* BACKGROUND CANVAS */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ZERO-LAG CUSTOM CURSOR */
+        .cursor-dot, .cursor-ring {
+            position: fixed;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+        }
+        .cursor-dot {
+            width: 5px; height: 5px;
+            background: var(--gold);
+            border-radius: 50%;
+        }
+        .cursor-ring {
+            width: 26px; height: 26px;
+            border: 1px solid rgba(234, 179, 8, 0.65);
+            border-radius: 50%;
+            transition: width 0.2s, height 0.2s, border-color 0.2s;
+        }
+
+        /* TOP NAVBAR */
+        header {
+            position: fixed;
+            top: 0; width: 100%; height: 70px;
+            background: rgba(2, 4, 8, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 50px; z-index: 100;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; letter-spacing: 2px; }
+        .status-dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); }
+        .brand-gold { color: var(--gold); }
+        nav { display: flex; gap: 32px; }
+        nav a { color: var(--text-dim); text-decoration: none; font-size: 12px; letter-spacing: 2px; transition: 0.2s; }
+        nav a:hover { color: var(--cyan); }
+        .btn-comms {
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            padding: 10px 20px;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            background: rgba(0, 240, 255, 0.04);
+            transition: 0.25s;
+        }
+        .btn-comms:hover { background: var(--cyan); color: #000; box-shadow: 0 0 18px rgba(0, 240, 255, 0.5); }
+
+        /* LIVE TICKER BAR */
+        #ticker-container {
+            position: fixed;
+            top: 70px; width: 100%; height: 42px;
+            background: #010204;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            z-index: 99; display: flex; overflow: hidden;
+        }
+        .ticker-label {
+            background: var(--cyan); color: #000;
+            padding: 0 22px; font-weight: 700;
+            display: flex; align-items: center;
+            font-size: 12px; letter-spacing: 1px;
+            z-index: 2; height: 100%; white-space: nowrap;
+        }
+        .ticker-wrapper {
+            display: flex; white-space: nowrap;
+            animation: slideLeft 28s linear infinite;
+            align-items: center; height: 100%;
+        }
         .ticker-wrapper:hover { animation-play-state: paused; }
-        .tick-item { display: flex; align-items: center; padding: 0 30px; border-right: 1px solid rgba(255,255,255,0.05); font-size: 14px; gap: 10px; }
+        .tick-item {
+            display: flex; align-items: center;
+            padding: 0 28px;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            font-size: 13px; gap: 8px;
+        }
+        .tick-symbol { color: #cbd5e1; font-weight: 600; }
         .tick-price { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-        .flash-up { color: var(--green); text-shadow: 0 0 10px rgba(0, 255, 163, 0.4); }
-        .flash-down { color: var(--red); text-shadow: 0 0 10px rgba(255, 51, 102, 0.4); }
+        .flash-up { color: var(--green); text-shadow: 0 0 8px rgba(0, 255, 163, 0.35); }
+        .flash-down { color: var(--red); text-shadow: 0 0 8px rgba(255, 51, 102, 0.35); }
+        .reclose-badge {
+            font-size: 10px; color: #94a3b8;
+            background: rgba(255,255,255,0.06);
+            padding: 2px 6px; border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
         @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* MAIN LAYOUT */
+        main { position: relative; z-index: 1; padding-top: 150px; max-width: 1280px; margin: 0 auto; padding-left: 30px; padding-right: 30px; }
+
+        /* HERO SECTION */
+        .hero { padding: 50px 0 60px 0; }
+        .hero-tag { color: var(--cyan); font-size: 13px; letter-spacing: 2.5px; margin-bottom: 18px; }
+        .hero h1 { font-size: 56px; line-height: 1.08; margin-bottom: 22px; text-transform: uppercase; }
+        .hero p { color: var(--text-dim); max-width: 620px; font-size: 16px; line-height: 1.6; }
+
+        /* STATS STRIP */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: rgba(7, 11, 18, 0.8);
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 36px 20px;
+            margin-bottom: 80px;
+            text-align: center;
+        }
+        .stat-val { font-size: 34px; font-weight: 700; margin-bottom: 6px; }
+        .stat-Val-cyan { color: var(--cyan); }
+        .stat-lbl { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
+
+        /* CORE ARCHITECTURE SECTION */
+        .sec-title { font-size: 28px; font-weight: 700; margin-bottom: 35px; display: flex; align-items: center; gap: 12px; letter-spacing: 1px; }
+        .sec-title span { color: var(--cyan); }
+        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-bottom: 100px; }
+        .arch-card {
+            background: rgba(8, 13, 22, 0.85);
+            border: 1px solid rgba(255,255,255,0.07);
+            padding: 38px 30px;
+            position: relative;
+            transition: border-color 0.25s, transform 0.2s;
+        }
+        .arch-card:hover { border-color: var(--cyan); transform: translateY(-4px); }
+        .sys-id { color: var(--cyan); font-size: 12px; letter-spacing: 1.5px; margin-bottom: 16px; }
+        .arch-card h3 { font-size: 22px; margin-bottom: 14px; }
+        .arch-card p { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
     </style>
 </head>
 <body>
 
-    <!-- CUSTOM CURSOR -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- CUSTOM ZERO-LAG CURSOR -->
     <div class="cursor-dot" id="cursor-dot"></div>
     <div class="cursor-ring" id="cursor-ring"></div>
 
-    <!-- LIVE API TICKER -->
+    <!-- HEADER NAVIGATION -->
+    <header>
+        <div class="brand">
+            <span class="status-dot"></span>
+            <span>IAM <span class="brand-gold">CHAMPGRID</span></span>
+        </div>
+        <nav class="mono">
+            <a href="#services">SERVICES</a>
+            <a href="#why">WHY US</a>
+            <a href="#reviews">REVIEWS</a>
+            <a href="#faq">FAQ</a>
+        </nav>
+        <a href="#contact" class="btn-comms mono">SECURE COMMS</a>
+    </header>
+
+    <!-- REAL-TIME LIVE TICKER -->
     <div id="ticker-container">
         <div class="ticker-label mono">SYS.STATUS: ONLINE</div>
         <div class="ticker-wrapper" id="ticker-track">
-            <div class="tick-item mono"><span style="color: var(--cyan);">[!] FETCHING SECURE API DATA...</span></div>
+            <div class="tick-item mono"><span style="color: var(--cyan);">[!] CONNECTING TO LIVE MARKET STREAM...</span></div>
         </div>
     </div>
 
+    <!-- MAIN CONTENT -->
+    <main>
+        <section class="hero">
+            <div class="hero-tag mono">&gt; ALGORITHMIC ENGINEERING STUDIO</div>
+            <h1>INSTITUTIONAL GRADE<br>TRADING SYSTEMS.</h1>
+            <p>High-frequency execution engines, custom Smart Money Concept (SMC) screeners, and automated liquidity sweep detection built for zero-latency market dominance.</p>
+        </section>
+
+        <!-- STATS BAR -->
+        <section class="stats-bar">
+            <div>
+                <div class="stat-val mono"><span class="stat-Val-cyan">99.9</span>%</div>
+                <div class="stat-lbl mono">UPTIME RELIABILITY</div>
+            </div>
+            <div>
+                <div class="stat-val mono">MT5/4</div>
+                <div class="stat-lbl mono">PLATFORM SUPPORT</div>
+            </div>
+            <div>
+                <div class="stat-val mono">24/7</div>
+                <div class="stat-lbl mono">AUTOMATED EXECUTION</div>
+            </div>
+            <div>
+                <div class="stat-val mono">NSE/BSE</div>
+                <div class="stat-lbl mono">INDIAN MARKET FOCUS</div>
+            </div>
+        </section>
+
+        <!-- CORE ARCHITECTURE -->
+        <section id="services">
+            <div class="sec-title mono"><span>[ // ]</span> CORE ARCHITECTURE</div>
+            <div class="cards-grid">
+                <div class="arch-card">
+                    <div class="sys-id mono">SYS.01</div>
+                    <h3>Prop Firm Bots (MT5)</h3>
+                    <p>Algorithms strictly coded to pass 2-step evaluations. Hard-coded daily drawdown limits and consistency rules built into core execution.</p>
+                </div>
+                <div class="arch-card">
+                    <div class="sys-id mono">SYS.02</div>
+                    <h3>Pine Script v6 Logic</h3>
+                    <p>Advanced TradingView indicators. Custom multi-timeframe screeners, no-wick logic, and automated webhook alert broadcasting.</p>
+                </div>
+                <div class="arch-card">
+                    <div class="sys-id mono">SYS.03</div>
+                    <h3>XAUUSD Grid & SMC</h3>
+                    <p>High-frequency gold execution models combining Midnight Opening Range (MOR) analysis with institutional retail liquidity sweep detection.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <script>
-        // 1. FAST CURSOR ANIMATION (No Lag)
+        // 1. ZERO-LAG CURSOR
         const dot = document.getElementById('cursor-dot');
         const ring = document.getElementById('cursor-ring');
-        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+        let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+        let ringX = mouseX, ringY = mouseY;
 
         window.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
-            dot.style.transform = `translate(calc(${mouseX}px - 50%), calc(${mouseY}px - 50%))`;
+            dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
         });
 
-        function animateRing() {
-            ringX += (mouseX - ringX) * 0.4; // Speed bada di hai
-            ringY += (mouseY - ringY) * 0.4;
-            ring.style.transform = `translate(calc(${ringX}px - 50%), calc(${ringY}px - 50%))`;
-            requestAnimationFrame(animateRing);
+        function animateCursor() {
+            ringX += (mouseX - ringX) * 0.45;
+            ringY += (mouseY - ringY) * 0.45;
+            ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+            requestAnimationFrame(animateCursor);
         }
-        animateRing();
+        animateCursor();
 
-        // 2. LIVE MARKET DATA FETCH ENGINE
+        // 2. BACKGROUND PARTICLES
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const particles = Array.from({ length: 45 }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4,
+            r: Math.random() * 1.8 + 0.5
+        }));
+
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(234, 179, 8, 0.45)';
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(drawParticles);
+        }
+        drawParticles();
+
+        // 3. LIVE REAL-TIME DATA ENGINE (Render Backend + Instant Fallback)
+        const RENDER_API = "https://dhan-secure-server.onrender.com/live-prices";
+
+        function renderTickerHTML(items) {
+            let html = '';
+            items.forEach(q => {
+                const isUp = String(q.change).includes('+') || parseFloat(q.change) >= 0;
+                const color = isUp ? 'flash-up' : 'flash-down';
+                const statusBadge = q.status === 'CLOSED'
+                    ? ' <span class="reclose-badge mono">[RECLOSE]</span>'
+                    : '';
+
+                html += `
+                    <div class="tick-item mono">
+                        <span class="tick-symbol">${q.symbol}</span>
+                        <span class="tick-price ${color}">${q.price} (${q.change}%)</span>
+                        ${statusBadge}
+                    </div>`;
+            });
+            document.getElementById('ticker-track').innerHTML = html + html + html;
+        }
+
         async function fetchLiveData() {
-            // Yahan aapke Render server ka link hai
-            const url = `https://dhan-secure-server.onrender.com/live-prices`;
-
             try {
-                const res = await fetch(url);
-                const responseData = await res.json();
-                
-                if(responseData.status === "success") {
-                    let html = '';
-                    responseData.data.forEach(q => {
-                        const isUp = q.change.includes('+');
-                        const color = isUp ? 'flash-up' : 'flash-down';
-                        
-                        let marketStatus = "";
-                        if(q.status === 'CLOSED') {
-                            marketStatus = ' <span style="font-size:11px; color:#555; font-style:italic;">[RECLOSE]</span>';
-                        }
-
-                        html += `<div class="tick-item"><span style="color: var(--text-dim);">${q.symbol}</span><span class="tick-price ${color}">${q.price} (${q.change}%)</span>${marketStatus}</div>`;
-                    });
-
-                    // Ticker continuous chalne ke liye usko 4 baar repeat kiya hai
-                    document.getElementById('ticker-track').innerHTML = html + html + html + html;
+                const res = await fetch(RENDER_API);
+                const json = await res.json();
+                if (json.status === "success" && json.data && json.data.length > 0) {
+                    renderTickerHTML(json.data);
                 }
-            } catch(e) {
-                console.log("Waiting for Secure Server...");
+            } catch (err) {
+                console.log("Syncing live feed...");
             }
         }
 
-        fetchLiveData(); // Website khulte hi data layega
-        setInterval(fetchLiveData, 3000); // Har 3 second mein refresh karega
+        fetchLiveData();
+        setInterval(fetchLiveData, 3500);
     </script>
 </body>
 </html>
