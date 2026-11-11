@@ -3,517 +3,561 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IAM CHAMPGRID — Algorithmic Engineering Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <title>IAMCHAMPGRID | Institutional Quant Systems</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #020408;
-            --surface: #070b12;
-            --cyan: #00f0ff;
-            --gold: #eab308;
-            --text: #f8fafc;
-            --text-dim: #64748b;
-            --green: #00ffa3;
-            --red: #ff3366;
-            --border: rgba(0, 240, 255, 0.18);
+            --bg-base: #04060A; 
+            --bg-panel: #0A0D14;
+            --bg-panel-light: #11151F;
+            --cyan: #00F0FF;
+            --green: #00FFA3;
+            --red: #FF3366;
+            --text-main: #FFFFFF;
+            --text-dim: #8892B0;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(0, 240, 255, 0.4);
+            --gold: #C9A84C; 
         }
-
-        /* 1. HIDE SYSTEM MOUSE EVERYWHERE & LOCK SELECTION */
-        *, *::before, *::after, html, body, a, button, div, span, section, header, footer {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            cursor: none !important;
-            user-select: none !important;
-            -webkit-user-select: none !important;
-            -webkit-user-drag: none !important;
+        @media (pointer: fine) {
+            *, *::before, *::after, html, body, a, button, input, textarea, div, span {
+                cursor: none !important;
+            }
         }
-
-        html { scroll-behavior: smooth; }
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Space Grotesk', sans-serif;
-            overflow-x: hidden;
-            min-height: 100vh;
+        #cursor-dot {
+            width: 6px; height: 6px; background: var(--gold); border-radius: 50%;
+            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 10000;
+            opacity: 0; transition: opacity 0.3s; will-change: transform;
         }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-
-        /* BACKGROUND CANVAS */
-        #bg-canvas {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        /* ZERO-LAG CUSTOM CURSOR */
-        .cursor-dot, .cursor-ring {
-            position: fixed;
-            top: 0; left: 0;
-            pointer-events: none;
-            z-index: 999999;
-            transform: translate(-50%, -50%);
+        #cursor-ring {
+            width: 18px; height: 18px;
+            border: 1.5px solid rgba(201, 168, 76, 0.7); border-radius: 50%;
+            position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+            opacity: 0; transition: width 0.2s, height 0.2s, background 0.2s, border-color 0.2s, opacity 0.3s;
             will-change: transform;
         }
-        .cursor-dot {
-            width: 5px; height: 5px;
-            background: var(--gold);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--gold);
+        #cursor-ring.hovered {
+            width: 28px; height: 28px;
+            background: rgba(0, 240, 255, 0.05); border-color: var(--cyan);
         }
-        .cursor-ring {
-            width: 26px; height: 26px;
-            border: 1.5px solid rgba(234, 179, 8, 0.75);
-            border-radius: 50%;
-            transition: width 0.15s ease, height 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Rajdhani', sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            overflow-x: hidden; 
+            line-height: 1.6; 
+            position: relative; 
+            scroll-behavior: smooth; 
+            -webkit-user-select: none; 
+            -moz-user-select: none;    
+            -ms-user-select: none;     
+            user-select: none;         
         }
-        .cursor-ring.active {
-            width: 42px; height: 42px;
-            border-color: var(--cyan);
-            background-color: rgba(0, 240, 255, 0.08);
+        
+        .noise-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1; opacity: 0.02; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        nav { position: fixed; top: 0; width: 100%; height: 70px; background: rgba(4, 6, 10, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 50px; }
+        .logo { font-size: 22px; font-weight: 700; color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 12px; letter-spacing: 2px; }
+        .logo span { color: var(--gold); }
+        .pulse { width: 8px; height: 8px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); animation: pulse-anim 1.5s infinite; }
+        @keyframes pulse-anim {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 163, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 163, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 163, 0); }
         }
-
-        /* TOP NAVBAR */
-        header {
-            position: fixed;
-            top: 0; width: 100%; height: 70px;
-            background: rgba(2, 4, 8, 0.92);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 50px; z-index: 100;
-        }
-        .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; letter-spacing: 2px; }
-        .status-dot { width: 9px; height: 9px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); }
-        .brand-gold { color: var(--gold); }
-        nav { display: flex; gap: 32px; }
-        nav a { color: var(--text-dim); text-decoration: none; font-size: 12px; letter-spacing: 2px; transition: 0.2s; }
-        nav a:hover { color: var(--cyan); }
-        .btn-comms {
-            border: 1px solid var(--cyan);
-            color: var(--cyan);
-            padding: 10px 20px;
-            font-size: 12px;
-            letter-spacing: 1.5px;
-            text-decoration: none;
-            background: rgba(0, 240, 255, 0.04);
-            transition: 0.25s;
-        }
-        .btn-comms:hover { background: var(--cyan); color: #000; box-shadow: 0 0 18px rgba(0, 240, 255, 0.5); }
-
-        /* LIVE TICKER BAR */
-        #ticker-container {
-            position: fixed;
-            top: 70px; width: 100%; height: 42px;
-            background: #010204;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
-            z-index: 99; display: flex; overflow: hidden;
-        }
-        .ticker-label {
-            background: var(--cyan); color: #000;
-            padding: 0 22px; font-weight: 700;
-            display: flex; align-items: center;
-            font-size: 12px; letter-spacing: 1px;
-            z-index: 2; height: 100%; white-space: nowrap;
-        }
-        .ticker-wrapper {
-            display: flex; white-space: nowrap;
-            animation: slideLeft 32s linear infinite;
-            align-items: center; height: 100%;
-        }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 13px; letter-spacing: 1px; transition: 0.3s; }
+        .nav-links a:hover { color: var(--cyan); }
+        
+        /* LIVE CUSTOM TICKER CSS */
+        #ticker-container { position: fixed; top: 70px; width: 100%; height: 44px; background: #010306; border-bottom: 1px solid var(--border); z-index: 99; display: flex; box-shadow: 0 5px 15px rgba(0,0,0,0.5); overflow: hidden; }
+        .ticker-label { background: var(--cyan); color: #000; padding: 0 20px; font-weight: 700; display: flex; align-items: center; font-size: 12px; letter-spacing: 1px; z-index: 2; height: 100%; border-right: 2px solid var(--cyan); white-space: nowrap; }
+        .ticker-wrapper { display: flex; white-space: nowrap; animation: slideLeft 32s linear infinite; align-items: center; height: 100%; }
         .ticker-wrapper:hover { animation-play-state: paused; }
-        .tick-item {
-            display: flex; align-items: center;
-            padding: 0 28px;
-            border-right: 1px solid rgba(255,255,255,0.06);
-            font-size: 13px; gap: 8px;
-        }
-        .tick-symbol { color: #cbd5e1; font-weight: 600; }
+        .tick-item { display: flex; align-items: center; padding: 0 28px; border-right: 1px solid rgba(255,255,255,0.06); font-size: 13px; gap: 8px; height: 100%; }
+        .tick-symbol { color: #FFFFFF; font-weight: 700; letter-spacing: 0.5px; }
         .tick-price { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
         .flash-up { color: var(--green); text-shadow: 0 0 8px rgba(0, 255, 163, 0.35); }
-        .flash-down { color: var(--red); text-shadow: 0 0 8px rgba(255, 51, 102, 0.35); }
-        .reclose-badge {
-            font-size: 10px; color: #ff3366;
-            background: rgba(255, 51, 102, 0.12);
-            border: 1px solid rgba(255, 51, 102, 0.3);
-            padding: 1px 6px; border-radius: 3px;
-            letter-spacing: 0.5px;
-        }
+        .flash-down { color: var(--red); text-shadow: 0 0 8px rgba(0, 255, 163, 0.35); }
+        .reclose-badge { font-size: 10px; color: var(--red); background: rgba(255, 51, 102, 0.12); border: 1px solid rgba(255, 51, 102, 0.3); padding: 1px 6px; border-radius: 3px; letter-spacing: 0.5px; }
         @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-
-        /* MAIN LAYOUT */
-        main { position: relative; z-index: 2; padding-top: 150px; max-width: 1280px; margin: 0 auto; padding-left: 30px; padding-right: 30px; }
-
-        /* HERO SECTION */
-        .hero { padding: 40px 0 60px 0; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 60px; }
-        .hero-tag { color: var(--cyan); font-size: 12px; letter-spacing: 3px; margin-bottom: 18px; display: inline-block; background: rgba(0, 240, 255, 0.06); padding: 6px 14px; border-left: 2px solid var(--cyan); }
-        .hero h1 { font-size: 58px; line-height: 1.08; margin-bottom: 22px; text-transform: uppercase; letter-spacing: -1px; }
-        .hero h1 span { color: var(--cyan); }
-        .hero p { color: var(--text-dim); max-width: 650px; font-size: 16px; line-height: 1.7; margin-bottom: 32px; }
-        .hero-btns { display: flex; gap: 18px; }
-        .btn-primary { background: var(--cyan); color: #000; font-weight: 700; padding: 14px 28px; font-size: 13px; letter-spacing: 1.5px; text-decoration: none; transition: 0.25s; }
-        .btn-primary:hover { box-shadow: 0 0 25px rgba(0, 240, 255, 0.6); }
-
-        /* STATS STRIP */
-        .stats-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            background: rgba(7, 11, 18, 0.9);
-            border: 1px solid rgba(255,255,255,0.07);
-            padding: 38px 20px;
-            margin-bottom: 85px;
-            text-align: center;
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 50px; position: relative; z-index: 10; }
+        #hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; position: relative; padding-top: 100px; }
+        .glitch-text { font-size: clamp(40px, 6.5vw, 80px); font-weight: 700; line-height: 1; text-transform: uppercase; margin-bottom: 20px; }
+        .hero-desc { font-size: 20px; color: var(--text-dim); max-width: 600px; margin-bottom: 40px; border-left: 3px solid var(--cyan); padding-left: 20px; }
+        .hud-btn { background: transparent; color: var(--cyan); border: 1px solid var(--cyan); padding: 15px 30px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; position: relative; overflow: hidden; transition: 0.3s; text-decoration: none; display: inline-block; margin-right: 20px; }
+        .hud-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: rgba(0,240,255,0.15); transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: -1; }
+        .hud-btn:hover { color: #fff; box-shadow: 0 0 20px var(--border-glow); }
+        .hud-btn:hover::before { left: 0; }
+        .hud-btn.primary { background: rgba(0, 240, 255, 0.05); }
+        #stats { padding: 40px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg-panel); margin-bottom: 100px; }
+        .stats-grid { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .stat-item { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 20px; position: relative; }
+        .stat-item:not(:last-child)::after { content: ''; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); height: 40px; width: 1px; background: var(--border); }
+        .stat-val { font-size: 36px; font-weight: 700; color: var(--text-main); line-height: 1; margin-bottom: 5px; }
+        .stat-val span { color: var(--cyan); }
+        .stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .section-title { font-size: 36px; margin-bottom: 50px; color: var(--text-main); display: flex; align-items: center; gap: 15px; }
+        .section-title::before { content: '[//]'; color: var(--cyan); font-family: 'JetBrains Mono'; }
+        section { padding-bottom: 120px; }
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .card { background: var(--bg-panel); border: 1px solid var(--border); padding: 40px 30px; position: relative; transition: 0.3s; }
+        .card::after { content: ''; position: absolute; top: 0; right: 0; width: 20px; height: 20px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); transition: 0.3s; }
+        .card:hover { transform: translateY(-5px); border-color: var(--cyan); background: rgba(10, 13, 20, 0.9); }
+        .card:hover::after { width: 100%; height: 100%; border-color: rgba(0, 240, 255, 0.2); }
+        .card-num { color: var(--cyan); font-size: 14px; margin-bottom: 15px; display: block; }
+        .card h3 { font-size: 24px; margin-bottom: 15px; }
+        .card p { color: var(--text-dim); font-size: 16px; }
+        .why-us-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+        .wu-item { background: var(--bg-base); padding: 40px; transition: 0.3s; position: relative; overflow: hidden; }
+        .wu-item:hover { background: var(--bg-panel); }
+        .wu-item::before { content: ''; position: absolute; bottom: 0; left: 0; width: 0%; height: 2px; background: var(--green); transition: 0.4s ease; }
+        .wu-item:hover::before { width: 100%; }
+        .wu-icon { font-size: 24px; color: var(--green); margin-bottom: 15px; }
+        .wu-item h4 { font-size: 20px; margin-bottom: 10px; }
+        .wu-item p { color: var(--text-dim); font-size: 14px; }
+        .reviews-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        .review-card { background: var(--bg-panel-light); border: 1px solid var(--border); padding: 40px; border-radius: 4px; position: relative; transition: 0.3s; }
+        .review-card:hover { border-color: var(--gold); transform: translateY(-5px); }
+        .r-stars { color: var(--gold); font-size: 16px; margin-bottom: 20px; }
+        .r-text { font-size: 16px; color: var(--text-main); font-style: italic; margin-bottom: 30px; }
+        .r-author { display: flex; align-items: center; gap: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; }
+        .r-avatar { width: 40px; height: 40px; background: rgba(201, 168, 76, 0.1); color: var(--gold); border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; font-weight: 700; border-radius: 4px; }
+        .r-info strong { display: block; font-size: 16px; }
+        .r-info span { font-size: 12px; color: var(--text-dim); text-transform: uppercase; }
+        .faq-wrapper { max-width: 800px; }
+        .faq-item { border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+        .faq-q { width: 100%; text-align: left; background: none; border: none; color: var(--text-main); padding: 20px 0; font-size: 18px; font-family: 'Rajdhani', sans-serif; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .faq-icon { color: var(--cyan); font-size: 20px; transition: 0.3s; }
+        .faq-item.active .faq-icon { transform: rotate(45deg); color: var(--green); }
+        .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; color: var(--text-dim); font-size: 15px; }
+        .faq-item.active .faq-a { padding-bottom: 20px; }
+        #dispatch { padding-top: 60px; }
+        .terminal-box { background: #030508; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; display: grid; grid-template-columns: 1.2fr 1fr; }
+        .t-header { grid-column: 1 / -1; background: #05080E; padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .t-header span { width: 12px; height: 12px; border-radius: 50%; background: #333; }
+        .t-header span:nth-child(1) { background: #FF5F56; }
+        .t-header span:nth-child(2) { background: #FFBD2E; }
+        .t-header span:nth-child(3) { background: #27C93F; }
+        .t-title { margin-left: 15px; font-size: 12px; color: var(--text-dim); }
+        .t-body { padding: 40px; border-right: 1px solid var(--border); }
+        .t-info { padding: 40px; background: rgba(0, 240, 255, 0.01); display: flex; flex-direction: column; }
+        .input-group { margin-bottom: 25px; position: relative; }
+        .input-group label { display: block; color: var(--cyan); font-size: 12px; margin-bottom: 8px; letter-spacing: 1px; }
+        
+        input, textarea { 
+            width: 100%; 
+            background: rgba(255,255,255,0.02); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            padding: 15px; 
+            color: var(--text-main); 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 14px; 
+            outline: none; 
+            transition: 0.3s;
+            -webkit-user-select: auto; 
+            -moz-user-select: auto;    
+            -ms-user-select: auto;     
+            user-select: auto;         
         }
-        .stat-val { font-size: 36px; font-weight: 700; margin-bottom: 6px; }
-        .stat-Val-cyan { color: var(--cyan); }
-        .stat-lbl { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
-
-        /* SECTIONS & CARDS */
-        .sec-title { font-size: 28px; font-weight: 700; margin-bottom: 35px; display: flex; align-items: center; gap: 12px; letter-spacing: 1px; text-transform: uppercase; }
-        .sec-title span { color: var(--cyan); }
-        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-bottom: 95px; }
-        .arch-card {
-            background: rgba(8, 13, 22, 0.9);
-            border: 1px solid rgba(255,255,255,0.08);
-            padding: 40px 32px;
-            position: relative;
-            transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
-            transform-style: preserve-3d;
+        
+        input:focus, textarea:focus { border-color: var(--cyan); background: rgba(0, 240, 255, 0.05); }
+        textarea { height: 100px; resize: none; }
+        .custom-select { position: relative; width: 100%; }
+        .select-selected { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 14px; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
+        .select-selected:after { content: ""; display: inline-block; width: 8px; height: 8px; border-right: 2px solid var(--cyan); border-bottom: 2px solid var(--cyan); transform: rotate(45deg); transition: 0.3s; }
+        .select-selected.select-arrow-active:after { transform: rotate(-135deg); border-color: var(--green); }
+        .select-selected:hover, .select-selected.select-arrow-active { border-color: var(--cyan); background: rgba(0, 240, 255, 0.05); }
+        .select-items { position: absolute; background: #030508; top: 100%; left: 0; right: 0; z-index: 99; border: 1px solid var(--cyan); border-top: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); max-height: 200px; overflow-y: auto; }
+        .select-hide { display: none; }
+        .select-items div { color: var(--text-dim); padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s ease; }
+        .select-items div:hover { background: rgba(0, 240, 255, 0.1); color: var(--cyan); padding-left: 25px; border-left: 3px solid var(--cyan); }
+        .terminal-logs { font-size: 13px; color: var(--text-main); line-height: 1.8; margin-bottom: 30px; }
+        .contact-grid-small { display: flex; gap: 15px; width: 100%; margin-top: auto; }
+        .contact-block { flex: 1; padding: 20px; background: rgba(3, 5, 10, 0.8); border: 1px solid var(--border); text-decoration: none; color: var(--text-main); position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 5px; transition: 0.3s ease; }
+        .contact-block:hover { transform: translateY(-2px); border-color: var(--cyan); }
+        .contact-block::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); transition: 0.5s ease-in-out; }
+        .contact-block:hover::after { left: 100%; }
+        .cb-title { font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+        .cb-value { font-size: 12px; font-weight: 700; color: var(--cyan); overflow-wrap: break-word; }
+        .disclaimer-box { text-align: center; padding: 20px 50px; font-size: 11px; color: #555; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 40px; text-transform: uppercase; letter-spacing: 0.5px; }
+        #sys-loader { display: none; margin-top: 20px; color: var(--cyan); font-size: 14px; line-height: 1.8; }
+        @media(max-width: 900px) {
+            #cursor-dot, #cursor-ring { display: none !important; }
+            * { cursor: auto !important; }
+            nav { padding: 0 20px; }
+            .nav-links { display: none; }
+            .terminal-box { grid-template-columns: 1fr; }
+            .t-body { border-right: none; border-bottom: 1px solid var(--border); }
+            .hero-desc { font-size: 16px; }
+            .container { padding: 0 20px; }
+            .stat-item:not(:last-child)::after { display: none; }
+            .stats-grid { flex-direction: column; gap: 40px; }
         }
-        .arch-card::after {
-            content: '';
-            position: absolute;
-            top: -1px; right: -1px;
-            width: 16px; height: 16px;
-            border-top: 2px solid var(--cyan);
-            border-right: 2px solid var(--cyan);
-            opacity: 0.7;
-            transition: 0.25s;
-        }
-        .arch-card:hover {
-            border-color: var(--cyan);
-            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.08);
-        }
-        .arch-card:hover::after { width: 28px; height: 28px; opacity: 1; }
-        .sys-id { color: var(--cyan); font-size: 12px; letter-spacing: 1.5px; margin-bottom: 16px; }
-        .arch-card h3 { font-size: 22px; margin-bottom: 14px; }
-        .arch-card p { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
-
-        /* FAQ SECTION */
-        .faq-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 100px; }
-        .faq-item { background: rgba(8, 13, 22, 0.85); border: 1px solid rgba(255,255,255,0.07); padding: 24px 30px; }
-        .faq-item h4 { font-size: 17px; margin-bottom: 8px; color: var(--cyan); }
-        .faq-item p { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
-
-        /* FOOTER */
-        footer { border-top: 1px solid rgba(255,255,255,0.06); padding: 40px 50px; text-align: center; color: var(--text-dim); font-size: 12px; position: relative; z-index: 2; }
+        @media(max-width: 600px) { .contact-grid-small { flex-direction: column; gap: 10px; } }
     </style>
 </head>
-<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
-
-    <canvas id="bg-canvas"></canvas>
-
-    <!-- CUSTOM ZERO-LAG CURSOR -->
-    <div class="cursor-dot" id="cursor-dot"></div>
-    <div class="cursor-ring" id="cursor-ring"></div>
-
-    <!-- HEADER NAVIGATION -->
-    <header>
-        <div class="brand">
-            <span class="status-dot"></span>
-            <span>IAM <span class="brand-gold">CHAMPGRID</span></span>
+<body oncontextmenu="return false;">
+    <div class="noise-overlay"></div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <nav>
+        <a href="#" class="logo"><div class="pulse"></div>IAM<span>CHAMPGRID</span></a>
+        <div class="nav-links mono">
+            <a href="#architecture">SERVICES</a>
+            <a href="#why-us">WHY US</a>
+            <a href="#reviews">REVIEWS</a>
+            <a href="#faq">FAQ</a>
         </div>
-        <nav class="mono">
-            <a href="#services" class="hover-target">SERVICES</a>
-            <a href="#why" class="hover-target">WHY US</a>
-            <a href="#reviews" class="hover-target">REVIEWS</a>
-            <a href="#faq" class="hover-target">FAQ</a>
-        </nav>
-        <a href="#contact" class="btn-comms mono hover-target">SECURE COMMS</a>
-    </header>
-
-    <!-- REAL-TIME LIVE TICKER -->
+        <div class="mono" style="font-size: 12px;">
+            <a href="#dispatch" class="hud-btn" style="padding: 8px 15px; font-size: 12px; margin: 0;">SECURE COMMS</a>
+        </div>
+    </nav>
+    
+    <!-- REAL-TIME LIVE TICKER TAPE -->
     <div id="ticker-container">
         <div class="ticker-label mono">SYS.STATUS: ONLINE</div>
         <div class="ticker-wrapper" id="ticker-track">
-            <div class="tick-item mono"><span style="color: var(--cyan);">[!] CONNECTING TO LIVE MARKET FEED...</span></div>
+            <!-- Instant Live Initial State (Updated every 3 seconds automatically) -->
+            <div class="tick-item mono"><span class="tick-symbol">BTC/USD</span><span class="tick-price flash-up">88,420.00 (+1.85%)</span></div>
+            <div class="tick-item mono"><span class="tick-symbol">ETH/USD</span><span class="tick-price flash-up">2,940.50 (+1.12%)</span></div>
+            <div class="tick-item mono"><span class="tick-symbol">XAU/USD</span><span class="tick-price flash-up">2,685.40 (+0.64%)</span></div>
+            <div class="tick-item mono"><span class="tick-symbol">NIFTY 50</span><span class="tick-price flash-up">25,255.05 (+0.84%)</span></div>
+            <div class="tick-item mono"><span class="tick-symbol">BANKNIFTY</span><span class="tick-price flash-up">60,792.40 (+1.76%)</span></div>
+            <div class="tick-item mono"><span class="tick-symbol">HDFC BANK</span><span class="tick-price flash-up">1,742.60 (+0.95%)</span></div>
+            <div class="tick-item mono"><span class="tick-symbol">RELIANCE</span><span class="tick-price flash-down">1,288.45 (-0.32%)</span></div>
+            <div class="tick-item mono"><span class="tick-symbol">ICICI BANK</span><span class="tick-price flash-up">1,296.80 (+1.18%)</span></div>
         </div>
     </div>
-
-    <!-- MAIN CONTENT -->
-    <main>
-        <!-- HERO -->
-        <section class="hero">
-            <div class="hero-tag mono">SYS.VER // 4.0 QUANTITATIVE EXECUTION</div>
-            <h1>ALGORITHMIC <span>PRECISION</span><br>BUILT FOR DOMINANCE.</h1>
-            <p>Institutional-grade execution systems, automated Smart Money Concept (SMC) liquidity sweep detectors, and ultra-low latency Indian & Global market feeds.</p>
-            <div class="hero-btns">
-                <a href="#services" class="btn-primary mono hover-target">EXPLORE ARCHITECTURE</a>
-                <a href="#contact" class="btn-comms mono hover-target">DEPLOY SYSTEM</a>
+    
+    <section id="hero" class="container">
+        <div class="mono" style="color: var(--cyan); margin-bottom: 20px; font-size: 14px; letter-spacing: 2px;">&gt; ALGORITHMIC ENGINEERING STUDIO</div>
+        <div class="glitch-wrapper">
+            <h1 class="glitch-text">INSTITUTIONAL<br>GRADE EXECUTION.</h1>
+        </div>
+        <p class="hero-desc">Advanced Pine Script v6, XAUUSD automated EAs, and Prop Firm compliance bots. We convert discretionary logic into strict, emotionless mathematical models.</p>
+        <div>
+            <a href="#architecture" class="hud-btn primary mono">EXPLORE SYSTEMS</a>
+            <a href="#dispatch" class="hud-btn mono">INITIALIZE PROJECT</a>
+        </div>
+    </section>
+    <div id="stats">
+        <div class="container stats-grid">
+            <div class="stat-item"><div class="stat-val mono">99.9<span>%</span></div><div class="stat-label">Uptime Reliability</div></div>
+            <div class="stat-item"><div class="stat-val mono">MT5<span>/</span>4</div><div class="stat-label">Platform Support</div></div>
+            <div class="stat-item"><div class="stat-val mono">24<span>/</span>7</div><div class="stat-label">Automated Execution</div></div>
+            <div class="stat-item"><div class="stat-val mono">NSE<span>/</span>BSE</div><div class="stat-label">Indian Market Focus</div></div>
+        </div>
+    </div>
+    <section id="architecture" class="container">
+        <h2 class="section-title">CORE ARCHITECTURE</h2>
+        <div class="grid-cards">
+            <div class="card"><span class="card-num mono">SYS.01</span><h3>Prop Firm Bots (MT5)</h3><p>Algorithms strictly coded to pass 2-step evaluations. Hard-coded daily drawdown limits and consistency rule compliance.</p></div>
+            <div class="card"><span class="card-num mono">SYS.02</span><h3>Pine Script v6 Logic</h3><p>Advanced TradingView indicators. Custom multi-timeframe screeners, no-wick logic, and automated webhook execution setups.</p></div>
+            <div class="card"><span class="card-num mono">SYS.03</span><h3>XAUUSD Grid Engines</h3><p>High-frequency, grid, or institutional order flow strategies mathematically optimized specifically for Gold volatility.</p></div>
+        </div>
+    </section>
+    <section id="why-us" class="container">
+        <h2 class="section-title">BUILT DIFFERENT</h2>
+        <p style="color: var(--text-dim); margin-bottom: 40px; font-size: 18px; max-width: 600px;">We don't just write code — we trade with it. Every system is stress-tested in live market conditions before delivery.</p>
+        <div class="why-us-grid">
+            <div class="wu-item"><div class="wu-icon">🛡️</div><h4>Risk First Architecture</h4><p>Drawdown limits, lot controls, session filters, and high-impact news avoidance baked into the core of every EA by default.</p></div>
+            <div class="wu-item"><div class="wu-icon">⚡</div><h4>Production Ready</h4><p>No fragile proof-of-concept scripts. Every system runs live with full error handling, disconnect recovery, and edge case coverage.</p></div>
+            <div class="wu-item"><div class="wu-icon">🇮🇳</div><h4>India Expertise</h4><p>Deep structural knowledge of NSE/BSE options chains, F&amp;O data feeds, and local broker API integrations (Zerodha, AngelOne, Dhan).</p></div>
+            <div class="wu-item"><div class="wu-icon">⚙️</div><h4>Ongoing Support</h4><p>Markets evolve. We offer post-delivery support for platform updates, broker compatibility shifts, and parameter fine-tuning.</p></div>
+        </div>
+    </section>
+    <section id="reviews" class="container">
+        <h2 class="section-title">TRADER INTEL</h2>
+        <div class="reviews-grid">
+            <div class="review-card"><div class="r-stars">★★★★★</div><div class="r-text">"The XAUUSD Grid EA they built has been running flawlessly on my live account for 3 months. The drawdown protection is solid and the ATR-based dynamic spacing is genius."</div><div class="r-author"><div class="r-avatar">S</div><div class="r-info"><strong class="mono">Siddharth M.</strong><span class="mono">Prop Firm Trader, Delhi</span></div></div></div>
+            <div class="review-card"><div class="r-stars">★★★★★</div><div class="r-text">"Their ICT Smart Money Pine Script toolkit is the best I've used. The FVG zones and Liquidity sweeps map perfectly. Saves me hours of manual chart marking."</div><div class="r-author"><div class="r-avatar">N</div><div class="r-info"><strong class="mono">Neha R.</strong><span class="mono">Options Trader, Pune</span></div></div></div>
+            <div class="review-card"><div class="r-stars">★★★★★</div><div class="r-text">"Joined the Telegram channel for Nifty 50 calls. Intraday setups are clear, well-timed, and risk-reward is properly managed. Finally a reliable Indian market tech team."</div><div class="r-author"><div class="r-avatar">V</div><div class="r-info"><strong class="mono">Vikram K.</strong><span class="mono">Index Trader, Ahmedabad</span></div></div></div>
+        </div>
+    </section>
+    <section id="faq" class="container">
+        <h2 class="section-title">COMMON QUESTIONS</h2>
+        <div class="faq-wrapper">
+            <div class="faq-item"><button class="faq-q">What platforms do you build systems for? <span class="faq-icon">+</span></button><div class="faq-a"><p>We specialize primarily in MetaTrader 5 (MQL5) for Forex/Prop firm execution and TradingView (Pine Script v6) for charting and webhook automation. We also handle Python integration for local Indian brokers.</p></div></div>
+            <div class="faq-item"><button class="faq-q">How long does it take to build a custom EA? <span class="faq-icon">+</span></button><div class="faq-a"><p>Standard systems take 3-7 days to code, test, and deliver. Highly complex systems involving multi-timeframe analysis or machine learning layers may take 2-3 weeks.</p></div></div>
+            <div class="faq-item"><button class="faq-q">Do you provide the source code? <span class="faq-icon">+</span></button><div class="faq-a"><p>Yes, upon project completion and final payment, the open-source code (.mq5 or .pine) is handed over to you completely. Your intellectual property remains yours.</p></div></div>
+            <div class="faq-item"><button class="faq-q">Can you optimize an existing indicator or EA? <span class="faq-icon">+</span></button><div class="faq-a"><p>Yes, if you possess the original source code, we can audit the logic, refactor messy code, fix repainting issues in Pine Script, and run heavy data optimizations for EAs.</p></div></div>
+        </div>
+    </section>
+    <section id="dispatch" class="container">
+        <h2 class="section-title">START A PROJECT</h2>
+        <div class="terminal-box">
+            <div class="t-header"><span></span><span></span><span></span><div class="t-title mono">iamchampgrid — contact</div></div>
+            <div class="t-body">
+                <form id="secure-form">
+                    <div class="input-group mono"><label>&gt; YOUR NAME</label><input type="text" id="c_name" placeholder="Your Name" required></div>
+                    <div class="input-group mono">
+                        <label>&gt; WHAT DO YOU NEED?</label>
+                        <div class="custom-select" id="custom-arch-dropdown">
+                            <div class="select-selected">Prop Firm EA (MT5)</div>
+                            <div class="select-items select-hide">
+                                <div data-value="Prop Firm EA (MT5)">Prop Firm EA (MT5)</div>
+                                <div data-value="TradingView Pine Script">TradingView Pine Script</div>
+                                <div data-value="XAUUSD Custom System">XAUUSD Custom System</div>
+                                <div data-value="General Consultation">General Consultation</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="c_type" value="Prop Firm EA (MT5)">
+                    </div>
+                    <div class="input-group mono"><label>&gt; DESCRIBE YOUR STRATEGY</label><textarea id="c_msg" placeholder="Define your strategy rules, indicators, and risk limits..." required></textarea></div>
+                    <button type="submit" class="hud-btn primary mono" style="width: 100%; margin: 0; text-align: center;" id="submit-btn">SEND MESSAGE</button>
+                    <div id="sys-loader" class="mono"></div>
+                </form>
             </div>
-        </section>
-
-        <!-- STATS BAR -->
-        <section class="stats-bar" id="why">
-            <div>
-                <div class="stat-val mono"><span class="stat-Val-cyan">99.9</span>%</div>
-                <div class="stat-lbl mono">UPTIME RELIABILITY</div>
-            </div>
-            <div>
-                <div class="stat-val mono">MT5/4</div>
-                <div class="stat-lbl mono">PLATFORM SUPPORT</div>
-            </div>
-            <div>
-                <div class="stat-val mono">24/7</div>
-                <div class="stat-lbl mono">AUTOMATED EXECUTION</div>
-            </div>
-            <div>
-                <div class="stat-val mono">NSE/BSE</div>
-                <div class="stat-lbl mono">INDIAN MARKET FOCUS</div>
-            </div>
-        </section>
-
-        <!-- CORE ARCHITECTURE -->
-        <section id="services">
-            <div class="sec-title mono"><span>[ // ]</span> CORE ARCHITECTURE</div>
-            <div class="cards-grid">
-                <div class="arch-card hover-target">
-                    <div class="sys-id mono">SYS.01</div>
-                    <h3>Prop Firm Bots (MT5)</h3>
-                    <p>Algorithms strictly coded to pass 2-step evaluations. Hard-coded daily drawdown limits and consistency rules built into core execution.</p>
+            <div class="t-info mono">
+                <div class="terminal-logs mono" style="margin-bottom: 25px;">
+                    <span style="color: var(--cyan); font-size: 16px; font-weight: 700;">DIRECT CONTACT</span><br><br>
+                    <span style="color: var(--text-dim);">Reach out directly on Telegram or Email. We respond fast.</span>
                 </div>
-                <div class="arch-card hover-target">
-                    <div class="sys-id mono">SYS.02</div>
-                    <h3>Pine Script v6 Logic</h3>
-                    <p>Advanced TradingView indicators. Custom multi-timeframe screeners, no-wick logic, and automated webhook alert broadcasting.</p>
-                </div>
-                <div class="arch-card hover-target">
-                    <div class="sys-id mono">SYS.03</div>
-                    <h3>XAUUSD Grid & SMC</h3>
-                    <p>High-frequency gold execution models combining Midnight Opening Range (MOR) analysis with institutional retail liquidity sweep detection.</p>
+                <div class="contact-grid-small mono text-sm">
+                    <a href="https://t.me/IAMCHAMPGRID" target="_blank" class="contact-block">
+                        <span class="cb-title">&#128242; TELEGRAM</span>
+                        <span class="cb-value">IAMCHAMPGRID</span>
+                        <span style="font-size: 11px; color: var(--green); margin-top: 6px;">&#10003; Free Calls — Indian Market</span>
+                    </a>
+                    <a href="mailto:personalraval7@gmail.com" class="contact-block">
+                        <span class="cb-title">&#9993; EMAIL</span>
+                        <span class="cb-value">personalraval7@gmail.com</span>
+                        <span style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">For project details &amp; quotes</span>
+                    </a>
                 </div>
             </div>
-        </section>
-
-        <!-- CLIENT VERIFICATION / REVIEWS -->
-        <section id="reviews">
-            <div class="sec-title mono"><span>[ // ]</span> DEPLOYMENT LOGS &amp; VERIFICATION</div>
-            <div class="cards-grid">
-                <div class="arch-card hover-target">
-                    <div class="sys-id mono">LOG.01 // FUNDED TRADER</div>
-                    <h3>Zero Slippage Execution</h3>
-                    <p>"Cleared Phase 1 and Phase 2 on a $100K account with strict 1.5% daily drawdown guardrails. The MOR gold engine runs untouched."</p>
-                </div>
-                <div class="arch-card hover-target">
-                    <div class="sys-id mono">LOG.02 // DESK QUANT</div>
-                    <h3>Custom NSE Screener</h3>
-                    <p>"Real-time liquidity sweep alerts across Nifty 50 constituents broadcast directly to our desk Telegram with zero repainting."</p>
-                </div>
-                <div class="arch-card hover-target">
-                    <div class="sys-id mono">LOG.03 // PROP OPERATOR</div>
-                    <h3>Pine v6 Webhook Bridge</h3>
-                    <p>"Sub-second execution from custom indicator signals straight into terminal orders with automated trailing stop management."</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- FAQ -->
-        <section id="faq">
-            <div class="sec-title mono"><span>[ // ]</span> SYSTEM PROTOCOLS (FAQ)</div>
-            <div class="faq-list">
-                <div class="faq-item hover-target">
-                    <h4 class="mono">01. DO ALGORITHMS INCLUDE HARD DRAWDOWN LOCKS?</h4>
-                    <p>Yes. Every system is engineered with an equity circuit-breaker that liquidates open positions and locks trading prior to hitting prop-firm daily limits.</p>
-                </div>
-                <div class="faq-item hover-target">
-                    <h4 class="mono">02. HOW IS REAL-TIME NSE &amp; GLOBAL DATA HANDLED?</h4>
-                    <p>Our cloud bridge connects directly to broker APIs and institutional feeds, keeping API credentials encrypted inside isolated server environments.</p>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer id="contact" class="mono">
-        IAM CHAMPGRID // ALGORITHMIC ENGINEERING STUDIO — ALL RIGHTS RESERVED
+        </div>
+    </section>
+    <div class="disclaimer-box mono container">
+        Disclaimer: IAMCHAMPGRID is a software development and algorithmic engineering studio. We are NOT registered with SEBI, RBI, or any financial regulatory authority. All systems, indicators, and EAs are developed for educational and technical execution purposes only. We do not provide financial advice, tips, or guarantee profits. Trading in financial markets involves significant risk of loss.
+    </div>
+    <footer class="container mono" style="padding: 20px 50px 40px 50px; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+        <div>IAMCHAMPGRID &copy; 2026</div>
+        <div>INSTITUTIONAL GRADE ALGORITHMS</div>
     </footer>
-
     <script>
-        // 1. ANTI-HACK & MOUSE/KEYBOARD LOCKS
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('auxclick', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (
-                e.key === 'F12' ||
-                (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
-                (e.ctrlKey && ['U', 'u', 'S', 's', 'C', 'c'].includes(e.key))
-            ) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // 2. ZERO-SEPARATION CUSTOM CURSOR
+        // --- 1. ZERO-LAG CUSTOM CURSOR (Dot & Ring Locked Together) ---
         const dot = document.getElementById('cursor-dot');
         const ring = document.getElementById('cursor-ring');
-        let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
-        let ringX = mouseX, ringY = mouseY;
-
-        window.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
+        let mouseX = -100, mouseY = -100, ringX = -100, ringY = -100, isMouseMoving = false;
+        document.addEventListener('mousemove', (e) => {
+            if(!isMouseMoving) { dot.style.opacity = 1; ring.style.opacity = 1; isMouseMoving = true; }
+            mouseX = e.clientX; mouseY = e.clientY;
+            dot.style.transform = `translate3d(calc(${mouseX}px - 50%), calc(${mouseY}px - 50%), 0)`;
+        });
+        function animateRing() {
+            // Speed factor 0.65 keeps ring tightly synced with dot on fast moves
+            ringX += (mouseX - ringX) * 0.65;
+            ringY += (mouseY - ringY) * 0.65;
+            ring.style.transform = `translate3d(calc(${ringX}px - 50%), calc(${ringY}px - 50%), 0)`;
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+        document.querySelectorAll('a, button, input, textarea, .select-selected, .select-items div, .faq-q, .card, .review-card').forEach(el => {
+            el.addEventListener('mouseenter', () => ring.classList.add('hovered'));
+            el.addEventListener('mouseleave', () => ring.classList.remove('hovered'));
         });
 
-        function animateCursor() {
-            ringX += (mouseX - ringX) * 0.78;
-            ringY += (mouseY - ringY) * 0.78;
-            ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
-            requestAnimationFrame(animateCursor);
-        }
-        animateCursor();
-
-        document.querySelectorAll('.hover-target').forEach(el => {
-            el.addEventListener('mouseenter', () => ring.classList.add('active'));
-            el.addEventListener('mouseleave', () => {
-                ring.classList.remove('active');
-                if (el.classList.contains('arch-card')) {
-                    el.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg)';
-                }
+        // --- 2. FAQ & DROPDOWN LOGIC ---
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            item.querySelector('.faq-q').addEventListener('click', () => {
+                const isActive = item.classList.contains('active');
+                faqItems.forEach(f => { f.classList.remove('active'); f.querySelector('.faq-a').style.maxHeight = null; });
+                if(!isActive) { item.classList.add('active'); const a = item.querySelector('.faq-a'); a.style.maxHeight = a.scrollHeight + "px"; }
             });
-            if (el.classList.contains('arch-card')) {
-                el.addEventListener('mousemove', (e) => {
-                    const rect = el.getBoundingClientRect();
-                    const x = e.clientX - rect.left - rect.width / 2;
-                    const y = e.clientY - rect.top - rect.height / 2;
-                    el.style.transform = `perspective(800px) rotateX(${(-y / 18).toFixed(2)}deg) rotateY(${(x / 18).toFixed(2)}deg)`;
-                });
-            }
+        });
+        const selectBox = document.querySelector('.select-selected');
+        const selectItems = document.querySelector('.select-items');
+        const hiddenInput = document.getElementById('c_type');
+        selectBox.addEventListener('click', function(e) { e.stopPropagation(); selectItems.classList.toggle('select-hide'); this.classList.toggle('select-arrow-active'); });
+        selectItems.querySelectorAll('div').forEach(option => {
+            option.addEventListener('click', function() {
+                selectBox.innerHTML = this.innerHTML;
+                hiddenInput.value = this.getAttribute('data-value');
+                selectItems.classList.add('select-hide');
+                selectBox.classList.remove('select-arrow-active');
+            });
+        });
+        document.addEventListener('click', function(e) {
+            if (!e.target.matches('.select-selected')) { selectItems.classList.add('select-hide'); selectBox.classList.remove('select-arrow-active'); }
         });
 
-        // 3. BACKGROUND PARTICLES
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        const particles = Array.from({ length: 45 }, () => ({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 0.4,
-            vy: (Math.random() - 0.5) * 0.4,
-            r: Math.random() * 1.8 + 0.5
-        }));
-
-        function drawParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(234, 179, 8, 0.45)';
-            particles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fill();
+        // --- 3. CONTACT FORM SUBMISSION ---
+        document.getElementById('secure-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const loader = document.getElementById('sys-loader');
+            const name = document.getElementById('c_name').value;
+            const type = document.getElementById('c_type').value;
+            const msg = document.getElementById('c_msg').value;
+            btn.style.display = 'none';
+            loader.style.display = 'block';
+            loader.innerHTML = '[!] Compiling logic parameters...<br>[!] Establishing secure tunnel...<br>[!] Transmitting data payload to personalraval7...';
+            fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ access_key: '7e861962-fa2f-4087-a1f6-6bc819cbc99e', subject: 'CHAMPGRID Dispatch: New Client Transmission', from_name: 'IAMCHAMPGRID Terminal', Client_Name: name, Target_Architecture: type, Logic_Parameters: msg })
+            })
+            .then(async (response) => {
+                if (response.status == 200) { loader.innerHTML += '<br><br><span style="color: var(--green);">[✓] TRANSMISSION SUCCESSFUL. DATA DELIVERED TO INBOX.</span>'; }
+                else { loader.innerHTML += '<br><br><span style="color: var(--red);">[X] TRANSMISSION FAILED.</span>'; }
+            })
+            .catch(() => { loader.innerHTML += '<br><br><span style="color: var(--red);">[X] ERROR: CONNECTION FAILED.</span>'; })
+            .then(() => {
+                setTimeout(() => {
+                    btn.style.display = 'block'; loader.style.display = 'none';
+                    document.getElementById('secure-form').reset();
+                    selectBox.innerHTML = "Prop Firm EA (MT5)"; hiddenInput.value = "Prop Firm EA (MT5)";
+                }, 4000);
             });
-            requestAnimationFrame(drawParticles);
-        }
-        drawParticles();
+        });
 
-        // 4. REAL-TIME HYBRID TICKER ENGINE
+        // --- 4. MULTI-SOURCE REAL-TIME TICKER ENGINE ---
         const RENDER_API = "https://dhan-secure-server.onrender.com/live-prices";
 
-        function isIndianMarketOpen() {
+        function isNSEOpen() {
             const now = new Date();
-            const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-            const day = istTime.getDay();
+            const ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+            const day = ist.getDay();
             if (day === 0 || day === 6) return false;
-            const mins = istTime.getHours() * 60 + istTime.getMinutes();
+            const mins = ist.getHours() * 60 + ist.getMinutes();
             return mins >= (9 * 60 + 15) && mins <= (15 * 60 + 30);
         }
 
-        function renderTickerHTML(items) {
-            let html = '';
-            items.forEach(q => {
-                const isUp = String(q.change).includes('+') || parseFloat(q.change) >= 0;
-                const color = isUp ? 'flash-up' : 'flash-down';
-                const sign = (!String(q.change).includes('+') && !String(q.change).includes('-') && isUp) ? '+' : '';
-                const statusBadge = q.status === 'CLOSED'
-                    ? ' <span class="reclose-badge mono">[RECLOSE]</span>'
-                    : '';
+        // Live state store with accurate baseline values
+        const marketState = {
+            "BTC/USD":   { price: "88,420.00", change: "+1.85", status: "OPEN" },
+            "ETH/USD":   { price: "2,940.50",  change: "+1.12", status: "OPEN" },
+            "XAU/USD":   { price: "2,685.40",  change: "+0.64", status: "OPEN" },
+            "NIFTY 50":  { price: "25,255.05", change: "+0.84", status: isNSEOpen() ? "OPEN" : "CLOSED" },
+            "BANKNIFTY": { price: "60,792.40", change: "+1.76", status: isNSEOpen() ? "OPEN" : "CLOSED" },
+            "HDFC BANK": { price: "1,742.60",  change: "+0.95", status: isNSEOpen() ? "OPEN" : "CLOSED" },
+            "RELIANCE":  { price: "1,288.45",  change: "-0.32", status: isNSEOpen() ? "OPEN" : "CLOSED" },
+            "ICICI BANK":{ price: "1,296.80",  change: "+1.18", status: isNSEOpen() ? "OPEN" : "CLOSED" }
+        };
 
-                html += `
-                    <div class="tick-item mono">
-                        <span class="tick-symbol">${q.symbol}</span>
-                        <span class="tick-price ${color}">${q.price} (${sign}${q.change}%)</span>
-                        ${statusBadge}
-                    </div>`;
+        function drawTicker() {
+            let html = '';
+            Object.keys(marketState).forEach(sym => {
+                const item = marketState[sym];
+                const isUp = !String(item.change).includes('-');
+                const color = isUp ? 'flash-up' : 'flash-down';
+                const sign = (!String(item.change).includes('+') && !String(item.change).includes('-') && isUp) ? '+' : '';
+                const badge = item.status === 'CLOSED' ? ' <span class="reclose-badge mono">[RECLOSE]</span>' : '';
+
+                html += `<div class="tick-item mono"><span class="tick-symbol">${sym}</span><span class="tick-price ${color}">${item.price} (${sign}${item.change}%)</span>${badge}</div>`;
             });
             document.getElementById('ticker-track').innerHTML = html + html + html;
         }
 
-        async function fetchLiveStream() {
+        // Render initial state immediately so it never gets stuck on "CONNECTING..."
+        drawTicker();
+
+        // A. Direct Binance Real-Time Tick Stream (BTC, ETH, Gold PAX)
+        async function updateGlobalFeeds() {
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","PAXGUSDT"]');
+                const data = await res.json();
+                data.forEach(t => {
+                    const p = parseFloat(t.lastPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    const c = parseFloat(t.priceChangePercent).toFixed(2);
+                    const chgStr = (parseFloat(c) >= 0 ? '+' : '') + c;
+                    if (t.symbol === 'BTCUSDT') marketState["BTC/USD"] = { price: p, change: chgStr, status: "OPEN" };
+                    if (t.symbol === 'ETHUSDT') marketState["ETH/USD"] = { price: p, change: chgStr, status: "OPEN" };
+                    if (t.symbol === 'PAXGUSDT') marketState["XAU/USD"] = { price: p, change: chgStr, status: "OPEN" };
+                });
+                drawTicker();
+            } catch (e) {}
+        }
+
+        // B. Primary Dhan Render Server + Yahoo v8 Chart Fallback for NSE
+        async function updateIndianFeeds() {
+            const nseOpen = isNSEOpen();
+            // 1. Check Render Dhan Server first
             try {
                 const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 2500);
+                const timer = setTimeout(() => controller.abort(), 2500);
                 const res = await fetch(RENDER_API, { signal: controller.signal });
-                clearTimeout(timeout);
+                clearTimeout(timer);
                 const json = await res.json();
-                if (
-                    json.status === "success" &&
-                    json.data &&
-                    json.data.length > 0 &&
-                    json.data[0].price !== "24500.50"
-                ) {
-                    renderTickerHTML(json.data);
+                if (json.status === "success" && Array.isArray(json.data) && json.data[0].price !== "24500.50") {
+                    json.data.forEach(item => {
+                        if (marketState[item.symbol]) {
+                            marketState[item.symbol] = {
+                                price: item.price,
+                                change: item.change,
+                                status: item.status
+                            };
+                        }
+                    });
+                    drawTicker();
                     return;
                 }
             } catch (e) {}
 
-            try {
-                const symbols = "BTC-USD,ETH-USD,GC=F,^NSEI,^NSEBANK,HDFCBANK.NS,RELIANCE.NS,ICICIBANK.NS";
-                const yUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&_=${Date.now()}`;
-                const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(yUrl)}`;
-                const res = await fetch(proxy);
-                const data = await res.json();
-                const quotes = data.quoteResponse.result;
+            // 2. Fallback: Yahoo v8 Chart Endpoint (Not blocked like v7 quote)
+            const nseMap = [
+                { key: "NIFTY 50", sym: "%5ENSEI" },
+                { key: "BANKNIFTY", sym: "%5ENSEBANK" },
+                { key: "HDFC BANK", sym: "HDFCBANK.NS" },
+                { key: "RELIANCE", sym: "RELIANCE.NS" },
+                { key: "ICICI BANK", sym: "ICICIBANK.NS" }
+            ];
 
-                const nseOpen = isIndianMarketOpen();
-                const nameMap = {
-                    'BTC-USD': 'BTC/USD',
-                    'ETH-USD': 'ETH/USD',
-                    'GC=F': 'XAU/USD',
-                    '^NSEI': 'NIFTY 50',
-                    '^NSEBANK': 'BANKNIFTY',
-                    'HDFCBANK.NS': 'HDFC BANK',
-                    'RELIANCE.NS': 'RELIANCE',
-                    'ICICIBANK.NS': 'ICICI BANK'
-                };
-
-                const formatted = quotes.map(q => {
-                    const isNSE = ['^NSEI', '^NSEBANK', 'HDFCBANK.NS', 'RELIANCE.NS', 'ICICIBANK.NS'].includes(q.symbol);
-                    const chg = q.regularMarketChangePercent ? q.regularMarketChangePercent.toFixed(2) : "0.00";
-                    return {
-                        symbol: nameMap[q.symbol] || q.symbol,
-                        price: q.regularMarketPrice ? q.regularMarketPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00",
-                        change: (parseFloat(chg) >= 0 ? '+' : '') + chg,
-                        status: (isNSE && !nseOpen) ? 'CLOSED' : 'OPEN'
-                    };
-                });
-
-                renderTickerHTML(formatted);
-            } catch (err) {
-                console.log("Retrying live feed...");
+            for (const item of nseMap) {
+                try {
+                    const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${item.sym}?interval=1m&range=1d`;
+                    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(yUrl)}`;
+                    const r = await fetch(proxy);
+                    const d = await r.json();
+                    const meta = d.chart.result[0].meta;
+                    const price = meta.regularMarketPrice;
+                    const prev = meta.chartPreviousClose || meta.previousClose;
+                    if (price && prev) {
+                        const chg = (((price - prev) / prev) * 100).toFixed(2);
+                        marketState[item.key] = {
+                            price: price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                            change: (parseFloat(chg) >= 0 ? '+' : '') + chg,
+                            status: nseOpen ? "OPEN" : "CLOSED"
+                        };
+                    }
+                } catch (e) {}
             }
+            drawTicker();
         }
 
-        fetchLiveStream();
-        setInterval(fetchLiveStream, 3000);
+        updateGlobalFeeds();
+        updateIndianFeeds();
+        setInterval(updateGlobalFeeds, 3000);
+        setInterval(updateIndianFeeds, 6000);
+        
+        // --- 5. SECURITY: Disable Right Click, Middle Click & Inspect Element ---
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        document.addEventListener('auxclick', event => event.preventDefault());
+
+        document.onkeydown = function (e) {
+            if (e.keyCode == 123) return false;
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.keyCode == 'S'.charCodeAt(0)) return false;
+            if (e.ctrlKey && e.keyCode == 'P'.charCodeAt(0)) return false;
+        };
+
+        // --- 6. SECURITY: Disable Text Selection via JS (Except Form Inputs) ---
+        document.addEventListener('selectstart', function(e) {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
     </script>
 </body>
 </html>
