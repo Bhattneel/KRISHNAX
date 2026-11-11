@@ -15,14 +15,24 @@
             --text-dim: #64748b;
             --green: #00ffa3;
             --red: #ff3366;
-            --border: rgba(0, 240, 255, 0.14);
+            --border: rgba(0, 240, 255, 0.18);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* 1. HIDE SYSTEM MOUSE EVERYWHERE & LOCK SELECTION */
+        *, *::before, *::after, html, body, a, button, div, span {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: none !important; /* System mouse 100% gayab */
+            user-select: none !important; /* Koi text copy nahi kar payega */
+            -webkit-user-select: none !important;
+            -webkit-user-drag: none !important;
+        }
+
         body {
             background-color: var(--bg);
             color: var(--text);
             font-family: 'Space Grotesk', sans-serif;
-            cursor: none;
             overflow-x: hidden;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
@@ -36,38 +46,46 @@
             pointer-events: none;
         }
 
-        /* ZERO-LAG CUSTOM CURSOR */
+        /* ZERO-LAG CUSTOM CURSOR (LOCKED TOGETHER) */
         .cursor-dot, .cursor-ring {
             position: fixed;
             top: 0; left: 0;
             pointer-events: none;
-            z-index: 9999;
+            z-index: 999999;
             transform: translate(-50%, -50%);
+            will-change: transform;
         }
         .cursor-dot {
             width: 5px; height: 5px;
             background: var(--gold);
             border-radius: 50%;
+            box-shadow: 0 0 8px var(--gold);
         }
         .cursor-ring {
             width: 26px; height: 26px;
-            border: 1px solid rgba(234, 179, 8, 0.65);
+            border: 1.5px solid rgba(234, 179, 8, 0.75);
             border-radius: 50%;
-            transition: width 0.2s, height 0.2s, border-color 0.2s;
+            transition: width 0.15s ease, height 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+        }
+        /* Hover effect on cards/links */
+        .cursor-ring.active {
+            width: 42px; height: 42px;
+            border-color: var(--cyan);
+            background-color: rgba(0, 240, 255, 0.08);
         }
 
         /* TOP NAVBAR */
         header {
             position: fixed;
             top: 0; width: 100%; height: 70px;
-            background: rgba(2, 4, 8, 0.9);
+            background: rgba(2, 4, 8, 0.92);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255,255,255,0.06);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 50px; z-index: 100;
         }
         .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; letter-spacing: 2px; }
-        .status-dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); }
+        .status-dot { width: 9px; height: 9px; background: var(--green); border-radius: 50%; box-shadow: 0 0 10px var(--green); }
         .brand-gold { color: var(--gold); }
         nav { display: flex; gap: 32px; }
         nav a { color: var(--text-dim); text-decoration: none; font-size: 12px; letter-spacing: 2px; transition: 0.2s; }
@@ -101,7 +119,7 @@
         }
         .ticker-wrapper {
             display: flex; white-space: nowrap;
-            animation: slideLeft 28s linear infinite;
+            animation: slideLeft 32s linear infinite;
             align-items: center; height: 100%;
         }
         .ticker-wrapper:hover { animation-play-state: paused; }
@@ -116,9 +134,10 @@
         .flash-up { color: var(--green); text-shadow: 0 0 8px rgba(0, 255, 163, 0.35); }
         .flash-down { color: var(--red); text-shadow: 0 0 8px rgba(255, 51, 102, 0.35); }
         .reclose-badge {
-            font-size: 10px; color: #94a3b8;
-            background: rgba(255,255,255,0.06);
-            padding: 2px 6px; border-radius: 3px;
+            font-size: 10px; color: #ff3366;
+            background: rgba(255, 51, 102, 0.12);
+            border: 1px solid rgba(255, 51, 102, 0.3);
+            padding: 1px 6px; border-radius: 3px;
             letter-spacing: 0.5px;
         }
         @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
@@ -126,44 +145,54 @@
         /* MAIN LAYOUT */
         main { position: relative; z-index: 1; padding-top: 150px; max-width: 1280px; margin: 0 auto; padding-left: 30px; padding-right: 30px; }
 
-        /* HERO SECTION */
-        .hero { padding: 50px 0 60px 0; }
-        .hero-tag { color: var(--cyan); font-size: 13px; letter-spacing: 2.5px; margin-bottom: 18px; }
-        .hero h1 { font-size: 56px; line-height: 1.08; margin-bottom: 22px; text-transform: uppercase; }
-        .hero p { color: var(--text-dim); max-width: 620px; font-size: 16px; line-height: 1.6; }
-
         /* STATS STRIP */
         .stats-bar {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            background: rgba(7, 11, 18, 0.8);
+            background: rgba(7, 11, 18, 0.85);
             border: 1px solid rgba(255,255,255,0.06);
-            padding: 36px 20px;
-            margin-bottom: 80px;
+            padding: 38px 20px;
+            margin-bottom: 75px;
             text-align: center;
         }
-        .stat-val { font-size: 34px; font-weight: 700; margin-bottom: 6px; }
+        .stat-val { font-size: 36px; font-weight: 700; margin-bottom: 6px; }
         .stat-Val-cyan { color: var(--cyan); }
         .stat-lbl { font-size: 10px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; }
 
-        /* CORE ARCHITECTURE SECTION */
+        /* CORE ARCHITECTURE SECTION WITH CORNER BRACKETS */
         .sec-title { font-size: 28px; font-weight: 700; margin-bottom: 35px; display: flex; align-items: center; gap: 12px; letter-spacing: 1px; }
         .sec-title span { color: var(--cyan); }
         .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-bottom: 100px; }
         .arch-card {
-            background: rgba(8, 13, 22, 0.85);
+            background: rgba(8, 13, 22, 0.88);
             border: 1px solid rgba(255,255,255,0.07);
-            padding: 38px 30px;
+            padding: 40px 32px;
             position: relative;
-            transition: border-color 0.25s, transform 0.2s;
+            transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+            transform-style: preserve-3d;
         }
-        .arch-card:hover { border-color: var(--cyan); transform: translateY(-4px); }
+        /* Corner Cyber Bracket */
+        .arch-card::after {
+            content: '';
+            position: absolute;
+            top: -1px; right: -1px;
+            width: 16px; height: 16px;
+            border-top: 2px solid var(--cyan);
+            border-right: 2px solid var(--cyan);
+            opacity: 0.7;
+            transition: 0.25s;
+        }
+        .arch-card:hover {
+            border-color: var(--cyan);
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.08);
+        }
+        .arch-card:hover::after { width: 28px; height: 28px; opacity: 1; }
         .sys-id { color: var(--cyan); font-size: 12px; letter-spacing: 1.5px; margin-bottom: 16px; }
         .arch-card h3 { font-size: 22px; margin-bottom: 14px; }
         .arch-card p { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;" onselectstart="return false;" ondragstart="return false;">
 
     <canvas id="bg-canvas"></canvas>
 
@@ -178,30 +207,24 @@
             <span>IAM <span class="brand-gold">CHAMPGRID</span></span>
         </div>
         <nav class="mono">
-            <a href="#services">SERVICES</a>
-            <a href="#why">WHY US</a>
-            <a href="#reviews">REVIEWS</a>
-            <a href="#faq">FAQ</a>
+            <a href="#services" class="hover-target">SERVICES</a>
+            <a href="#why" class="hover-target">WHY US</a>
+            <a href="#reviews" class="hover-target">REVIEWS</a>
+            <a href="#faq" class="hover-target">FAQ</a>
         </nav>
-        <a href="#contact" class="btn-comms mono">SECURE COMMS</a>
+        <a href="#contact" class="btn-comms mono hover-target">SECURE COMMS</a>
     </header>
 
     <!-- REAL-TIME LIVE TICKER -->
     <div id="ticker-container">
         <div class="ticker-label mono">SYS.STATUS: ONLINE</div>
         <div class="ticker-wrapper" id="ticker-track">
-            <div class="tick-item mono"><span style="color: var(--cyan);">[!] CONNECTING TO LIVE MARKET STREAM...</span></div>
+            <div class="tick-item mono"><span style="color: var(--cyan);">[!] INITIALIZING LIVE STREAM...</span></div>
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <main>
-        <section class="hero">
-            <div class="hero-tag mono">&gt; ALGORITHMIC ENGINEERING STUDIO</div>
-            <h1>INSTITUTIONAL GRADE<br>TRADING SYSTEMS.</h1>
-            <p>High-frequency execution engines, custom Smart Money Concept (SMC) screeners, and automated liquidity sweep detection built for zero-latency market dominance.</p>
-        </section>
-
         <!-- STATS BAR -->
         <section class="stats-bar">
             <div>
@@ -226,17 +249,17 @@
         <section id="services">
             <div class="sec-title mono"><span>[ // ]</span> CORE ARCHITECTURE</div>
             <div class="cards-grid">
-                <div class="arch-card">
+                <div class="arch-card hover-target">
                     <div class="sys-id mono">SYS.01</div>
                     <h3>Prop Firm Bots (MT5)</h3>
                     <p>Algorithms strictly coded to pass 2-step evaluations. Hard-coded daily drawdown limits and consistency rules built into core execution.</p>
                 </div>
-                <div class="arch-card">
+                <div class="arch-card hover-target">
                     <div class="sys-id mono">SYS.02</div>
                     <h3>Pine Script v6 Logic</h3>
                     <p>Advanced TradingView indicators. Custom multi-timeframe screeners, no-wick logic, and automated webhook alert broadcasting.</p>
                 </div>
-                <div class="arch-card">
+                <div class="arch-card hover-target">
                     <div class="sys-id mono">SYS.03</div>
                     <h3>XAUUSD Grid & SMC</h3>
                     <p>High-frequency gold execution models combining Midnight Opening Range (MOR) analysis with institutional retail liquidity sweep detection.</p>
@@ -246,7 +269,30 @@
     </main>
 
     <script>
-        // 1. ZERO-LAG CURSOR
+        // ==========================================
+        // 1. ANTI-HACK & MOUSE/KEYBOARD LOCKS
+        // ==========================================
+        // Block Right Click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Block Middle Click & Aux Clicks
+        document.addEventListener('auxclick', e => e.preventDefault());
+
+        // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U (View Source), Ctrl+S, Ctrl+C
+        document.addEventListener('keydown', e => {
+            if (
+                e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
+                (e.ctrlKey && ['U', 'u', 'S', 's', 'C', 'c'].includes(e.key))
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // ==========================================
+        // 2. ZERO-SEPARATION CUSTOM CURSOR
+        // ==========================================
         const dot = document.getElementById('cursor-dot');
         const ring = document.getElementById('cursor-ring');
         let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
@@ -255,22 +301,49 @@
         window.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
-            dot.style.transform = `translate(${mouseX}px, ${mouseY}px) translate(-50%, -50%)`;
+            dot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
         });
 
         function animateCursor() {
-            ringX += (mouseX - ringX) * 0.45;
-            ringY += (mouseY - ringY) * 0.45;
-            ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
+            // High speed factor (0.75) so dot and circle stay locked together
+            ringX += (mouseX - ringX) * 0.75;
+            ringY += (mouseY - ringY) * 0.75;
+            ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
             requestAnimationFrame(animateCursor);
         }
         animateCursor();
 
-        // 2. BACKGROUND PARTICLES
+        // Cursor Hover Effects & 3D Card Tilt
+        document.querySelectorAll('.hover-target').forEach(el => {
+            el.addEventListener('mouseenter', () => ring.classList.add('active'));
+            el.addEventListener('mouseleave', () => {
+                ring.classList.remove('active');
+                if (el.classList.contains('arch-card')) {
+                    el.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg)';
+                }
+            });
+            if (el.classList.contains('arch-card')) {
+                el.addEventListener('mousemove', (e) => {
+                    const rect = el.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    el.style.transform = `perspective(800px) rotateX(${(-y / 18).toFixed(2)}deg) rotateY(${(x / 18).toFixed(2)}deg)`;
+                });
+            }
+        });
+
+        // ==========================================
+        // 3. BACKGROUND PARTICLES
+        // ==========================================
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
         const particles = Array.from({ length: 45 }, () => ({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
@@ -294,14 +367,26 @@
         }
         drawParticles();
 
-        // 3. LIVE REAL-TIME DATA ENGINE (Render Backend + Instant Fallback)
+        // ==========================================
+        // 4. REAL-TIME HYBRID TICKER ENGINE
+        // ==========================================
         const RENDER_API = "https://dhan-secure-server.onrender.com/live-prices";
+
+        function isIndianMarketOpen() {
+            const now = new Date();
+            const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+            const day = istTime.getDay();
+            if (day === 0 || day === 6) return false;
+            const mins = istTime.getHours() * 60 + istTime.getMinutes();
+            return mins >= (9 * 60 + 15) && mins <= (15 * 60 + 30);
+        }
 
         function renderTickerHTML(items) {
             let html = '';
             items.forEach(q => {
                 const isUp = String(q.change).includes('+') || parseFloat(q.change) >= 0;
                 const color = isUp ? 'flash-up' : 'flash-down';
+                const sign = (!String(q.change).includes('+') && !String(q.change).includes('-') && isUp) ? '+' : '';
                 const statusBadge = q.status === 'CLOSED'
                     ? ' <span class="reclose-badge mono">[RECLOSE]</span>'
                     : '';
@@ -309,27 +394,74 @@
                 html += `
                     <div class="tick-item mono">
                         <span class="tick-symbol">${q.symbol}</span>
-                        <span class="tick-price ${color}">${q.price} (${q.change}%)</span>
+                        <span class="tick-price ${color}">${q.price} (${sign}${q.change}%)</span>
                         ${statusBadge}
                     </div>`;
             });
             document.getElementById('ticker-track').innerHTML = html + html + html;
         }
 
-        async function fetchLiveData() {
+        async function fetchLiveStream() {
+            // 1. Try Render Backend (Only accept if it's NOT the old 24500.50 test data)
             try {
-                const res = await fetch(RENDER_API);
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 2500);
+                const res = await fetch(RENDER_API, { signal: controller.signal });
+                clearTimeout(timeout);
                 const json = await res.json();
-                if (json.status === "success" && json.data && json.data.length > 0) {
+                if (
+                    json.status === "success" &&
+                    json.data &&
+                    json.data.length > 0 &&
+                    json.data[0].price !== "24500.50"
+                ) {
                     renderTickerHTML(json.data);
+                    return;
                 }
+            } catch (e) {
+                // Fallback to direct live stream below
+            }
+
+            // 2. Direct Real-Time Feed (Instant Zero-Delay Backup)
+            try {
+                const symbols = "BTC-USD,ETH-USD,GC=F,^NSEI,^NSEBANK,HDFCBANK.NS,RELIANCE.NS,ICICIBANK.NS";
+                const yUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}&_=${Date.now()}`;
+                const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(yUrl)}`;
+                const res = await fetch(proxy);
+                const data = await res.json();
+                const quotes = data.quoteResponse.result;
+
+                const nseOpen = isIndianMarketOpen();
+                const nameMap = {
+                    'BTC-USD': 'BTC/USD',
+                    'ETH-USD': 'ETH/USD',
+                    'GC=F': 'XAU/USD',
+                    '^NSEI': 'NIFTY 50',
+                    '^NSEBANK': 'BANKNIFTY',
+                    'HDFCBANK.NS': 'HDFC BANK',
+                    'RELIANCE.NS': 'RELIANCE',
+                    'ICICIBANK.NS': 'ICICI BANK'
+                };
+
+                const formatted = quotes.map(q => {
+                    const isNSE = ['^NSEI', '^NSEBANK', 'HDFCBANK.NS', 'RELIANCE.NS', 'ICICIBANK.NS'].includes(q.symbol);
+                    const chg = q.regularMarketChangePercent ? q.regularMarketChangePercent.toFixed(2) : "0.00";
+                    return {
+                        symbol: nameMap[q.symbol] || q.symbol,
+                        price: q.regularMarketPrice ? q.regularMarketPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00",
+                        change: (parseFloat(chg) >= 0 ? '+' : '') + chg,
+                        status: (isNSE && !nseOpen) ? 'CLOSED' : 'OPEN'
+                    };
+                });
+
+                renderTickerHTML(formatted);
             } catch (err) {
-                console.log("Syncing live feed...");
+                console.log("Retrying live feed...");
             }
         }
 
-        fetchLiveData();
-        setInterval(fetchLiveData, 3500);
+        fetchLiveStream();
+        setInterval(fetchLiveStream, 3000);
     </script>
 </body>
 </html>
