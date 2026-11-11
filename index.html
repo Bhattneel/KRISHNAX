@@ -82,7 +82,7 @@
         .tick-symbol { color: #FFFFFF; font-weight: 700; letter-spacing: 0.5px; }
         .tick-price { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
         .flash-up { color: var(--green); text-shadow: 0 0 8px rgba(0, 255, 163, 0.35); }
-        .flash-down { color: var(--red); text-shadow: 0 0 8px rgba(0, 255, 163, 0.35); }
+        .flash-down { color: var(--red); text-shadow: 0 0 8px rgba(255, 51, 102, 0.35); }
         .reclose-badge { font-size: 10px; color: var(--red); background: rgba(255, 51, 102, 0.12); border: 1px solid rgba(255, 51, 102, 0.3); padding: 1px 6px; border-radius: 3px; letter-spacing: 0.5px; }
         @keyframes slideLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         
@@ -223,15 +223,7 @@
     <div id="ticker-container">
         <div class="ticker-label mono">SYS.STATUS: ONLINE</div>
         <div class="ticker-wrapper" id="ticker-track">
-            <!-- Instant Live Initial State (Updated every 3 seconds automatically) -->
-            <div class="tick-item mono"><span class="tick-symbol">BTC/USD</span><span class="tick-price flash-up">88,420.00 (+1.85%)</span></div>
-            <div class="tick-item mono"><span class="tick-symbol">ETH/USD</span><span class="tick-price flash-up">2,940.50 (+1.12%)</span></div>
-            <div class="tick-item mono"><span class="tick-symbol">XAU/USD</span><span class="tick-price flash-up">2,685.40 (+0.64%)</span></div>
-            <div class="tick-item mono"><span class="tick-symbol">NIFTY 50</span><span class="tick-price flash-up">25,255.05 (+0.84%)</span></div>
-            <div class="tick-item mono"><span class="tick-symbol">BANKNIFTY</span><span class="tick-price flash-up">60,792.40 (+1.76%)</span></div>
-            <div class="tick-item mono"><span class="tick-symbol">HDFC BANK</span><span class="tick-price flash-up">1,742.60 (+0.95%)</span></div>
-            <div class="tick-item mono"><span class="tick-symbol">RELIANCE</span><span class="tick-price flash-down">1,288.45 (-0.32%)</span></div>
-            <div class="tick-item mono"><span class="tick-symbol">ICICI BANK</span><span class="tick-price flash-up">1,296.80 (+1.18%)</span></div>
+            <div class="tick-item mono"><span class="tick-symbol">SYNCING LIVE STREAM...</span></div>
         </div>
     </div>
     
@@ -352,7 +344,6 @@
             dot.style.transform = `translate3d(calc(${mouseX}px - 50%), calc(${mouseY}px - 50%), 0)`;
         });
         function animateRing() {
-            // Speed factor 0.65 keeps ring tightly synced with dot on fast moves
             ringX += (mouseX - ringX) * 0.65;
             ringY += (mouseY - ringY) * 0.65;
             ring.style.transform = `translate3d(calc(${ringX}px - 50%), calc(${ringY}px - 50%), 0)`;
@@ -419,8 +410,8 @@
             });
         });
 
-        // --- 4. MULTI-SOURCE REAL-TIME TICKER ENGINE ---
-        const RENDER_API = "https://dhan-secure-server.onrender.com/live-prices";
+        // --- 4. CLOUDFLARE WORKER + TRADINGVIEW SCANNER LIVE ENGINE ---
+        const WORKER_API = "https://krishnax.nilbhatt27.workers.dev/";
 
         function isNSEOpen() {
             const now = new Date();
@@ -431,16 +422,15 @@
             return mins >= (9 * 60 + 15) && mins <= (15 * 60 + 30);
         }
 
-        // Live state store with accurate baseline values
         const marketState = {
-            "BTC/USD":   { price: "88,420.00", change: "+1.85", status: "OPEN" },
-            "ETH/USD":   { price: "2,940.50",  change: "+1.12", status: "OPEN" },
-            "XAU/USD":   { price: "2,685.40",  change: "+0.64", status: "OPEN" },
-            "NIFTY 50":  { price: "25,255.05", change: "+0.84", status: isNSEOpen() ? "OPEN" : "CLOSED" },
-            "BANKNIFTY": { price: "60,792.40", change: "+1.76", status: isNSEOpen() ? "OPEN" : "CLOSED" },
-            "HDFC BANK": { price: "1,742.60",  change: "+0.95", status: isNSEOpen() ? "OPEN" : "CLOSED" },
-            "RELIANCE":  { price: "1,288.45",  change: "-0.32", status: isNSEOpen() ? "OPEN" : "CLOSED" },
-            "ICICI BANK":{ price: "1,296.80",  change: "+1.18", status: isNSEOpen() ? "OPEN" : "CLOSED" }
+            "XAU/USD":   { price: "---", change: "0.00", status: "OPEN" },
+            "BTC/USD":   { price: "---", change: "0.00", status: "OPEN" },
+            "ETH/USD":   { price: "---", change: "0.00", status: "OPEN" },
+            "NIFTY 50":  { price: "---", change: "0.00", status: isNSEOpen() ? "OPEN" : "CLOSED" },
+            "BANKNIFTY": { price: "---", change: "0.00", status: isNSEOpen() ? "OPEN" : "CLOSED" },
+            "HDFC BANK": { price: "---", change: "0.00", status: isNSEOpen() ? "OPEN" : "CLOSED" },
+            "RELIANCE":  { price: "---", change: "0.00", status: isNSEOpen() ? "OPEN" : "CLOSED" },
+            "ICICI BANK":{ price: "---", change: "0.00", status: isNSEOpen() ? "OPEN" : "CLOSED" }
         };
 
         function drawTicker() {
@@ -457,37 +447,11 @@
             document.getElementById('ticker-track').innerHTML = html + html + html;
         }
 
-        // Render initial state immediately so it never gets stuck on "CONNECTING..."
-        drawTicker();
-
-        // A. Direct Binance Real-Time Tick Stream (BTC, ETH, Gold PAX)
-        async function updateGlobalFeeds() {
+        async function fetchWorkerStream() {
             try {
-                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","PAXGUSDT"]');
-                const data = await res.json();
-                data.forEach(t => {
-                    const p = parseFloat(t.lastPrice).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const c = parseFloat(t.priceChangePercent).toFixed(2);
-                    const chgStr = (parseFloat(c) >= 0 ? '+' : '') + c;
-                    if (t.symbol === 'BTCUSDT') marketState["BTC/USD"] = { price: p, change: chgStr, status: "OPEN" };
-                    if (t.symbol === 'ETHUSDT') marketState["ETH/USD"] = { price: p, change: chgStr, status: "OPEN" };
-                    if (t.symbol === 'PAXGUSDT') marketState["XAU/USD"] = { price: p, change: chgStr, status: "OPEN" };
-                });
-                drawTicker();
-            } catch (e) {}
-        }
-
-        // B. Primary Dhan Render Server + Yahoo v8 Chart Fallback for NSE
-        async function updateIndianFeeds() {
-            const nseOpen = isNSEOpen();
-            // 1. Check Render Dhan Server first
-            try {
-                const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), 2500);
-                const res = await fetch(RENDER_API, { signal: controller.signal });
-                clearTimeout(timer);
+                const res = await fetch(`${WORKER_API}?t=${Date.now()}`, { cache: "no-store" });
                 const json = await res.json();
-                if (json.status === "success" && Array.isArray(json.data) && json.data[0].price !== "24500.50") {
+                if (json.status === "success" && Array.isArray(json.data)) {
                     json.data.forEach(item => {
                         if (marketState[item.symbol]) {
                             marketState[item.symbol] = {
@@ -498,45 +462,14 @@
                         }
                     });
                     drawTicker();
-                    return;
                 }
-            } catch (e) {}
-
-            // 2. Fallback: Yahoo v8 Chart Endpoint (Not blocked like v7 quote)
-            const nseMap = [
-                { key: "NIFTY 50", sym: "%5ENSEI" },
-                { key: "BANKNIFTY", sym: "%5ENSEBANK" },
-                { key: "HDFC BANK", sym: "HDFCBANK.NS" },
-                { key: "RELIANCE", sym: "RELIANCE.NS" },
-                { key: "ICICI BANK", sym: "ICICIBANK.NS" }
-            ];
-
-            for (const item of nseMap) {
-                try {
-                    const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${item.sym}?interval=1m&range=1d`;
-                    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(yUrl)}`;
-                    const r = await fetch(proxy);
-                    const d = await r.json();
-                    const meta = d.chart.result[0].meta;
-                    const price = meta.regularMarketPrice;
-                    const prev = meta.chartPreviousClose || meta.previousClose;
-                    if (price && prev) {
-                        const chg = (((price - prev) / prev) * 100).toFixed(2);
-                        marketState[item.key] = {
-                            price: price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                            change: (parseFloat(chg) >= 0 ? '+' : '') + chg,
-                            status: nseOpen ? "OPEN" : "CLOSED"
-                        };
-                    }
-                } catch (e) {}
+            } catch (e) {
+                console.log("Worker stream sync error:", e);
             }
-            drawTicker();
         }
 
-        updateGlobalFeeds();
-        updateIndianFeeds();
-        setInterval(updateGlobalFeeds, 3000);
-        setInterval(updateIndianFeeds, 6000);
+        fetchWorkerStream();
+        setInterval(fetchWorkerStream, 2500);
         
         // --- 5. SECURITY: Disable Right Click, Middle Click & Inspect Element ---
         document.addEventListener('contextmenu', event => event.preventDefault());
